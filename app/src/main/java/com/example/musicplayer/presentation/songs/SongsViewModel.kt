@@ -3,7 +3,7 @@ package com.example.musicplayer.presentation.songs
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.data.AudioPlayer
-import com.example.musicplayer.data.PlayerRepository
+import com.example.musicplayer.domain.PlayerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted

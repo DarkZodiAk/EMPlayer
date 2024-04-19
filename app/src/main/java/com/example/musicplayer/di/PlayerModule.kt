@@ -7,10 +7,11 @@ import androidx.room.Room
 import com.example.musicplayer.data.AudioObserver
 import com.example.musicplayer.data.AudioPlayer
 import com.example.musicplayer.data.PermissionObserver
+import com.example.musicplayer.data.PlayerRepositoryImpl
 import com.example.musicplayer.data.local.PlayerDatabase
-import com.example.musicplayer.data.PlayerRepository
 import com.example.musicplayer.data.local.dao.AudioDao
 import com.example.musicplayer.data.local.dao.PlaylistDao
+import com.example.musicplayer.domain.PlayerRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -50,7 +51,7 @@ object PlayerModule {
         playlistDao: PlaylistDao,
         audioDao: AudioDao
     ): PlayerRepository {
-        return PlayerRepository(playlistDao, audioDao)
+        return PlayerRepositoryImpl(playlistDao, audioDao)
     }
 
     @Provides

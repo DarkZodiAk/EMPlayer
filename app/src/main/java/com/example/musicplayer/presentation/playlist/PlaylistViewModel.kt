@@ -7,9 +7,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.data.AudioPlayer
-import com.example.musicplayer.data.PlayerRepository
 import com.example.musicplayer.data.local.entity.Audio
 import com.example.musicplayer.data.local.entity.Playlist
+import com.example.musicplayer.domain.PlayerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -41,7 +41,7 @@ class PlaylistViewModel @Inject constructor(
         savedStateHandle.get<Long>("id")?.let { id ->
             playlistJob = playerRepository.getPlaylistById(id)
                 .onEach {
-                    playlist = it
+                    playlist = it ?: Playlist(null, "")
                 }.launchIn(viewModelScope)
             songsJob = playerRepository.getSongsFromPlaylist(id)
                 .onEach {
@@ -65,10 +65,12 @@ class PlaylistViewModel @Inject constructor(
                 }
             }
             is PlaylistEvent.RenamePlaylist -> {
-                viewModelScope.launch {
-                    playerRepository.upsertPlaylist(
-                        playlist.copy(name = event.newName)
-                    )
+                if(event.newName.isNotBlank()){
+                    viewModelScope.launch {
+                        playerRepository.upsertPlaylist(
+                            playlist.copy(name = event.newName)
+                        )
+                    }
                 }
             }
             is PlaylistEvent.PlaySong -> {

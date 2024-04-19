@@ -19,9 +19,9 @@ class AudioPlayer(
 
     private var playlist = emptyList<Audio>()
 
-    val isPlayingFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
-    val currentAudio = MutableSharedFlow<Audio>(extraBufferCapacity = 1)
-    val currentTime = MutableSharedFlow<Long>(extraBufferCapacity = 1)
+    val isPlayingFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1, replay = 1)
+    val currentAudio = MutableSharedFlow<Audio>(extraBufferCapacity = 1, replay = 1)
+    val currentTime = MutableSharedFlow<Long>(extraBufferCapacity = 1, replay = 1)
 
     private val scope = CoroutineScope(Dispatchers.Main)
 
