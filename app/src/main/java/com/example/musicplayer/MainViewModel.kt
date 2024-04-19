@@ -1,7 +1,6 @@
 package com.example.musicplayer
 
 import android.Manifest
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -34,10 +33,10 @@ class MainViewModel @Inject constructor(
 
     fun checkReadPermission() {
         hasReadPermission = permissionObserver.checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
-        Log.d("PERMISSION GRANTED:", "$hasReadPermission")
         if(!hasReadPermission) {
             openPermissionDialog()
         } else {
+            isLoaded = true
             launchAudioObserver()
         }
     }
@@ -50,9 +49,7 @@ class MainViewModel @Inject constructor(
 
     private fun launchAudioObserver() {
         viewModelScope.launch {
-            audioObserver.observeAudio().collect {
-                isLoaded = it
-            }
+            audioObserver.observeAudio().collect{ }
         }
     }
 }

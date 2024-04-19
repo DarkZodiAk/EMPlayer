@@ -20,7 +20,7 @@ class PlayerRepositoryImpl(
         playlistDao.deletePlaylist(playlist)
     }
 
-    override fun getPlaylistById(id: Long): Flow<Playlist> {
+    override fun getPlaylistById(id: Long): Flow<Playlist?> {
         return playlistDao.getPlaylistById(id)
     }
 
