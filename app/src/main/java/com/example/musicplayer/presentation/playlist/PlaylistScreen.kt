@@ -21,7 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,14 +50,13 @@ fun PlaylistScreen(
         }
     }
 
-    var dropdownMenuIsVisible by remember { mutableStateOf(false) }
+    var dropdownMenuIsVisible by rememberSaveable { mutableStateOf(false) }
+    var deleteDialogIsVisible by rememberSaveable { mutableStateOf(false) }
+    var renameDialogIsVisible by rememberSaveable { mutableStateOf(false) }
 
-    var deleteDialogIsVisible by remember { mutableStateOf(false) }
+    var newName by rememberSaveable { mutableStateOf("") }
     
-    var renameDialogIsVisible by remember { mutableStateOf(false) }
-    var newName by remember { mutableStateOf("") }
-    
-    var selectedSongIdDropdown by remember { mutableStateOf<Long?>(null) }
+    var selectedSongIdDropdown by rememberSaveable { mutableStateOf<Long?>(null) }
     
     if(renameDialogIsVisible) {
         AlertDialog(
@@ -67,16 +66,23 @@ fun PlaylistScreen(
             text = {
                 TextField(
                     value = newName, 
-                    onValueChange = { newName = it }
+                    onValueChange = { newName = it },
+                    supportingText = {
+                        if(newName.isBlank())
+                            Text(text = "Имя не должно быть пустым")
+                    }
                 )
             },
             onDismissRequest = { renameDialogIsVisible = false }, 
             confirmButton = { 
-                Button(onClick = {
-                    viewModel.onEvent(PlaylistEvent.RenamePlaylist(newName))
-                    renameDialogIsVisible = false
-                    newName = ""
-                }) {
+                Button(
+                    enabled = newName.isNotBlank(),
+                    onClick = {
+                        viewModel.onEvent(PlaylistEvent.RenamePlaylist(newName))
+                        renameDialogIsVisible = false
+                        newName = ""
+                    }
+                ) {
                     Text(text = "Применить")
                 }
             },
@@ -159,7 +165,12 @@ fun PlaylistScreen(
                 .padding(padding)
                 .padding(16.dp)
         ) {
-            itemsIndexed(songs) { index, song ->
+            itemsIndexed(
+                items = songs,
+                key = { index, _ ->
+                    index
+                }
+            ) { index, song ->
                 SongCard(
                     song = song,
                     onClick = { viewModel.onEvent(PlaylistEvent.PlaySong(index)) },

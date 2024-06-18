@@ -8,10 +8,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.musicplayer.presentation.Route
 import com.example.musicplayer.presentation.components.NavBar
 import com.example.musicplayer.presentation.components.SongCard
@@ -22,7 +22,7 @@ fun SongsScreen(
     onOpenPlayer: () -> Unit,
     navigate: (Route) -> Unit
 ) {
-    val songs = viewModel.songs.collectAsState()
+    val songs = viewModel.songs.collectAsStateWithLifecycle()
 
     LaunchedEffect(true) {
         viewModel.uiEvent.collect { event ->
@@ -45,7 +45,12 @@ fun SongsScreen(
                 .padding(padding)
                 .padding(horizontal = 16.dp)
         ) {
-            itemsIndexed(songs.value) { index, song ->
+            itemsIndexed(
+                items = songs.value,
+                key = { index, _ ->
+                    index
+                }
+            ) { index, song ->
                 SongCard(
                     song = song,
                     onClick = { viewModel.onEvent(SongsEvent.PlaySong(index)) },

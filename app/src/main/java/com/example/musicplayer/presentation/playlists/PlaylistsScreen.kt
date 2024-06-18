@@ -19,15 +19,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.musicplayer.presentation.Route
 import com.example.musicplayer.presentation.components.NavBar
 
@@ -37,9 +37,9 @@ fun PlaylistsScreen(
     onPlaylistClick: (Long) -> Unit,
     navigate: (Route) -> Unit
 ) {
-    val playlists = viewModel.playlists.collectAsState()
-    var dialogIsVisible by remember { mutableStateOf(false) }
-    var playlistName by remember { mutableStateOf("") }
+    val playlists = viewModel.playlists.collectAsStateWithLifecycle()
+    var dialogIsVisible by rememberSaveable { mutableStateOf(false) }
+    var playlistName by rememberSaveable { mutableStateOf("") }
 
 
     if(dialogIsVisible){
@@ -103,7 +103,12 @@ fun PlaylistsScreen(
                     Text(text = "Новый плейлист")
                 }
             }
-            items(playlists.value) { playlist ->
+            items(
+                items = playlists.value,
+                key = { playlist ->
+                    playlist.id ?: -1
+                }
+            ) { playlist ->
                 Text(
                     text = playlist.name,
                     maxLines = 2,
