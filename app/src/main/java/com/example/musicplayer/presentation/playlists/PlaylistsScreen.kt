@@ -28,13 +28,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.musicplayer.presentation.Route
 import com.example.musicplayer.presentation.components.NavBar
 
 @Composable
 fun PlaylistsScreen(
     viewModel: PlaylistsViewModel = hiltViewModel(),
     onPlaylistClick: (Long) -> Unit,
-    navigate: (String) -> Unit
+    navigate: (Route) -> Unit
 ) {
     val playlists = viewModel.playlists.collectAsState()
     var dialogIsVisible by remember { mutableStateOf(false) }
@@ -48,14 +49,24 @@ fun PlaylistsScreen(
                 Text(text = "Имя плейлиста")
             },
             text = {
-                TextField(value = playlistName, onValueChange = { playlistName = it })
+                TextField(
+                    value = playlistName,
+                    onValueChange = { playlistName = it },
+                    supportingText = {
+                        if(playlistName.isBlank())
+                            Text(text = "Имя не должно быть пустым")
+                    }
+                )
             },
             confirmButton = {
-                Button(onClick = {
-                    viewModel.onEvent(PlaylistsEvent.NewPlaylist(playlistName))
-                    dialogIsVisible = false
-                    playlistName = ""
-                }) {
+                Button(
+                    enabled = playlistName.isNotBlank(),
+                    onClick = {
+                        viewModel.onEvent(PlaylistsEvent.NewPlaylist(playlistName))
+                        dialogIsVisible = false
+                        playlistName = ""
+                    }
+                ) {
                     Text(text = "Создать")
                 }
             },

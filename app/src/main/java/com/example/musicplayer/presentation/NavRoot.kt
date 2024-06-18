@@ -3,10 +3,8 @@ package com.example.musicplayer.presentation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
 import com.example.musicplayer.presentation.player.PlayerScreen
 import com.example.musicplayer.presentation.playlist.PlaylistScreen
 import com.example.musicplayer.presentation.playlists.PlaylistsScreen
@@ -22,46 +20,36 @@ fun NavRoot(
     if(isLoaded) {
         NavHost(
             navController = navController,
-            startDestination = Screen.SongsScreen.route,
+            startDestination = Route.SongsScreen,
             modifier = modifier
         ) {
-            composable(Screen.SongsScreen.route) {
+            composable<Route.SongsScreen> {
                 SongsScreen(
-                    onOpenPlayer = { navController.navigate(Screen.PlayerScreen.route) },
+                    onOpenPlayer = { navController.navigate(Route.PlayerScreen) },
                     navigate = { navController.navigate(it) }
                 )
             }
-            composable(Screen.PlaylistsScreen.route) {
+            composable<Route.PlaylistsScreen> {
                 PlaylistsScreen(
-                    onPlaylistClick = { navController.navigate(Screen.PlaylistScreen.route + "?id=$it") },
+                    onPlaylistClick = {
+                        navController.navigate(Route.PlaylistScreen(playlistId = it))
+                    },
                     navigate = { navController.navigate(it) }
                 )
             }
-            composable(
-                route = Screen.PlaylistScreen.route + "?id={id}",
-                arguments = listOf(
-                    navArgument("id") {
-                        type = NavType.LongType
-                    }
-                )
-            ) {
+            composable<Route.PlaylistScreen> {
                 PlaylistScreen(
-                    onOpenPlayer = { navController.navigate(Screen.PlayerScreen.route) },
-                    onAddSongsClick = { navController.navigate(Screen.SelectSongsScreen.route + "?playlistId=$it") },
+                    onOpenPlayer = { navController.navigate(Route.PlayerScreen) },
+                    onAddSongsClick = {
+                        navController.navigate(Route.SelectSongsScreen(playlistId = it))
+                    },
                     onBack = { navController.navigateUp() }
                 )
             }
-            composable(
-                route = Screen.SelectSongsScreen.route + "?playlistId={playlistId}",
-                arguments = listOf(
-                    navArgument("playlistId") {
-                        type = NavType.LongType
-                    }
-                )
-            ) {
+            composable<Route.SongsScreen> {
                 SelectSongsScreen(onBack = { navController.navigateUp() })
             }
-            composable(Screen.PlayerScreen.route) {
+            composable<Route.PlayerScreen> {
                 PlayerScreen(
                     onBack = { navController.navigateUp() }
                 )

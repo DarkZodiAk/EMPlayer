@@ -14,22 +14,23 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.example.musicplayer.presentation.Screen
+import com.example.musicplayer.presentation.Route
+
 
 @Composable
 fun NavBar(
-    onClick: (String) -> Unit,
+    onClick: (Route) -> Unit,
     index: Int
 ) {
     val items = listOf(
         BottomNavigationItem(
             title = "Песни",
-            destination = Screen.SongsScreen.route,
+            destination = Route.SongsScreen,
             icon = Icons.Filled.LibraryMusic
         ),
         BottomNavigationItem(
             title = "Плейлисты",
-            destination = Screen.PlaylistsScreen.route,
+            destination = Route.PlaylistsScreen,
             icon = Icons.Filled.FolderCopy
         )
     )
@@ -64,6 +65,6 @@ fun NavBar(
 
 data class BottomNavigationItem(
     val title: String,
-    val destination: String,
+    val destination: Route,
     val icon: ImageVector
 )

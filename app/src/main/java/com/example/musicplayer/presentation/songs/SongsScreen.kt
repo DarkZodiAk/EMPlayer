@@ -12,6 +12,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.musicplayer.presentation.Route
 import com.example.musicplayer.presentation.components.NavBar
 import com.example.musicplayer.presentation.components.SongCard
 
@@ -19,7 +20,7 @@ import com.example.musicplayer.presentation.components.SongCard
 fun SongsScreen(
     viewModel: SongsViewModel = hiltViewModel(),
     onOpenPlayer: () -> Unit,
-    navigate: (String) -> Unit
+    navigate: (Route) -> Unit
 ) {
     val songs = viewModel.songs.collectAsState()
 
