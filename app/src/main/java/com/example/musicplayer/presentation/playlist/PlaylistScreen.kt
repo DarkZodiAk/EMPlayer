@@ -18,7 +18,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -26,30 +25,42 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.musicplayer.data.local.entity.Playlist
 import com.example.musicplayer.presentation.components.DefaultDropDownMenu
 import com.example.musicplayer.presentation.components.SongCard
+import com.example.musicplayer.ui.theme.MusicPlayerTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlaylistScreen(
+fun PlaylistScreenRoot(
     viewModel: PlaylistViewModel = hiltViewModel(),
     onAddSongsClick: (Long) -> Unit,
     onOpenPlayer: () -> Unit,
     onBack: () -> Unit
 ) {
-    val playlist = viewModel.playlist
-    val songs = viewModel.songs
-
-    LaunchedEffect(true) {
-        viewModel.uiEvent.collect { event ->
-            when(event) {
-                UiPlaylistEvent.OpenPlayer -> onOpenPlayer()
+    PlaylistScreen(
+        state = viewModel.state,
+        onAction = { action ->
+            when(action) {
+                PlaylistAction.OnAddSongsClick -> onAddSongsClick(viewModel.state.playlist.id!!)
+                PlaylistAction.OnBackClick -> onBack()
+                PlaylistAction.OnDeletePlaylistClick -> onBack()
+                is PlaylistAction.OnSongClick -> onOpenPlayer()
+                else -> Unit
             }
+            viewModel.onAction(action)
         }
-    }
+    )
+}
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PlaylistScreen(
+    state: PlaylistState,
+    onAction: (PlaylistAction) -> Unit
+) {
     var dropdownMenuIsVisible by rememberSaveable { mutableStateOf(false) }
     var deleteDialogIsVisible by rememberSaveable { mutableStateOf(false) }
     var renameDialogIsVisible by rememberSaveable { mutableStateOf(false) }
@@ -78,7 +89,7 @@ fun PlaylistScreen(
                 Button(
                     enabled = newName.isNotBlank(),
                     onClick = {
-                        viewModel.onEvent(PlaylistEvent.RenamePlaylist(newName))
+                        onAction(PlaylistAction.OnRenamePlaylistClick(newName))
                         renameDialogIsVisible = false
                         newName = ""
                     }
@@ -108,8 +119,7 @@ fun PlaylistScreen(
             confirmButton = {
                 Button(onClick = {
                     deleteDialogIsVisible = false
-                    viewModel.onEvent(PlaylistEvent.DeletePlaylist)
-                    onBack()
+                    onAction(PlaylistAction.OnDeletePlaylistClick)
                 }) {
                     Text(text = "Да")
                 }
@@ -121,13 +131,15 @@ fun PlaylistScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = {
+                        onAction(PlaylistAction.OnBackClick)
+                    }) {
                         Icon(imageVector = Icons.AutoMirrored.Default.ArrowBack, contentDescription = null)
                     }
                 },
                 title = { 
                     Text(
-                        text = playlist.name,
+                        text = state.playlist.name,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -142,7 +154,7 @@ fun PlaylistScreen(
                         if(dropdownMenuIsVisible) {
                             DefaultDropDownMenu(
                                 actions = hashMapOf(
-                                    "Добавить песни" to { onAddSongsClick(playlist.id!!) },
+                                    "Добавить песни" to { onAction(PlaylistAction.OnAddSongsClick) },
                                     "Переименовать" to {
                                         dropdownMenuIsVisible = false
                                         renameDialogIsVisible = true
@@ -166,14 +178,14 @@ fun PlaylistScreen(
                 .padding(16.dp)
         ) {
             itemsIndexed(
-                items = songs,
+                items = state.songs,
                 key = { index, _ ->
                     index
                 }
             ) { index, song ->
                 SongCard(
                     song = song,
-                    onClick = { viewModel.onEvent(PlaylistEvent.PlaySong(index)) },
+                    onClick = { onAction(PlaylistAction.OnSongClick(index)) },
                     modifier = Modifier.fillMaxWidth(),
                     action = {
                         IconButton(
@@ -189,7 +201,7 @@ fun PlaylistScreen(
                         if(selectedSongIdDropdown == song.id){
                             DefaultDropDownMenu(
                                 actions = hashMapOf(
-                                    "Удалить" to { viewModel.onEvent(PlaylistEvent.RemoveSongFromPlaylist(song.id)) }
+                                    "Удалить" to { onAction(PlaylistAction.OnRemoveSongFromPlaylistClick(song.id)) }
                                 ),
                                 onDismissRequest = { selectedSongIdDropdown = null }
                             )
@@ -198,5 +210,16 @@ fun PlaylistScreen(
                 )
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun PlaylistScreenPreview() {
+    MusicPlayerTheme {
+        PlaylistScreen(
+            state = PlaylistState(Playlist(1L, "Playlist")),
+            onAction = {}
+        )
     }
 }

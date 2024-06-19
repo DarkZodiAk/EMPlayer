@@ -1,6 +1,6 @@
 package com.example.musicplayer.presentation.player
 
-import androidx.activity.compose.BackHandler
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,61 +18,70 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.musicplayer.domain.parseDuration
-import kotlinx.coroutines.launch
+import com.example.musicplayer.ui.theme.MusicPlayerTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
-fun PlayerScreen(
+fun PlayerScreenRoot(
     viewModel: PlayerViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
-    val song = viewModel.song
-    val isPlaying = viewModel.isPlaying
-    val currentTime = viewModel.currentTime
-
-    val snackbarState = rememberSaveable { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     LaunchedEffect(true) {
         viewModel.uiEvent.collect { event ->
             when(event) {
-                UiPlayerEvent.Back -> onBack()
-                UiPlayerEvent.SomethingWentWrong -> {
-                    scope.launch {
-                        snackbarState.showSnackbar(
-                            message = "Что-то пошло не так"
-                        )
-                    }
+                PlayerEvent.Error -> {
+                    Toast.makeText(
+                        context,
+                        "Что-то пошло не так",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         }
     }
 
+    PlayerScreen(
+        state = viewModel.state,
+        onAction = { action ->
+            when(action) {
+                PlayerAction.OnBackClick -> onBack()
+                else -> Unit
+            }
+            viewModel.onAction(action)
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PlayerScreen(
+    state: PlayerState,
+    onAction: (PlayerAction) -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {  },
                 navigationIcon = {
-                    IconButton(onClick = { viewModel.onEvent(PlayerEvent.ToPreviousScreen) }) {
+                    IconButton(onClick = { onAction(PlayerAction.OnBackClick) }) {
                         Icon(imageVector = Icons.AutoMirrored.Default.ArrowBack, contentDescription = null)
                     }
                 }
             )
-        },
-        snackbarHost = { SnackbarHost(hostState = snackbarState) }
+        }
     ) { padding ->
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -82,30 +91,39 @@ fun PlayerScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            Text(text = song.title)
+            Text(text = state.playingSong.title)
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = song.artist)
+            Text(text = state.playingSong.artist)
             Spacer(modifier = Modifier.height(16.dp))
-            Text(text = parseDuration(currentTime))
+            Text(text = parseDuration(state.currentTime))
             Spacer(modifier = Modifier.height(16.dp))
             Row(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                IconButton(onClick = { viewModel.onEvent(PlayerEvent.PrevSong) }) {
+                IconButton(onClick = { onAction(PlayerAction.OnPrevSongClick) }) {
                     Icon(imageVector = Icons.Default.SkipPrevious, contentDescription = null)
                 }
-                IconButton(onClick = { viewModel.onEvent(PlayerEvent.PlayPauseClicked) }) {
+                IconButton(onClick = { onAction(PlayerAction.OnPlayPauseClick) }) {
                     Icon(
-                        imageVector = if(isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        imageVector = if(state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = null
                     )
                 }
-                IconButton(onClick = { viewModel.onEvent(PlayerEvent.NextSong) }) {
+                IconButton(onClick = { onAction(PlayerAction.OnNextSongClick) }) {
                     Icon(imageVector = Icons.Default.SkipNext, contentDescription = null)
                 }
             }
         }
     }
+}
 
-    BackHandler(onBack = { viewModel.onEvent(PlayerEvent.ToPreviousScreen) })
+@Preview
+@Composable
+private fun PlayerScreenPreview() {
+    MusicPlayerTheme {
+        PlayerScreen(
+            state = PlayerState(),
+            onAction = {}
+        )
+    }
 }

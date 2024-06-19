@@ -7,35 +7,44 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.musicplayer.data.local.entity.Audio
 import com.example.musicplayer.presentation.Route
 import com.example.musicplayer.presentation.components.NavBar
 import com.example.musicplayer.presentation.components.SongCard
+import com.example.musicplayer.ui.theme.MusicPlayerTheme
+
+@Composable
+fun SongsScreenRoot(
+    viewModel: SongsViewModel = hiltViewModel(),
+    onOpenPlayer: () -> Unit,
+    onPlaylistsClick: () -> Unit
+) {
+    SongsScreen(
+        songs = viewModel.songs.collectAsStateWithLifecycle().value,
+        onAction = { action ->
+            when(action) {
+                SongsAction.OnPlaylistsClick -> onPlaylistsClick()
+                is SongsAction.PlaySong -> onOpenPlayer()
+            }
+            viewModel.onAction(action)
+        }
+    )
+}
 
 @Composable
 fun SongsScreen(
-    viewModel: SongsViewModel = hiltViewModel(),
-    onOpenPlayer: () -> Unit,
-    navigate: (Route) -> Unit
+    songs: List<Audio>,
+    onAction: (SongsAction) -> Unit
 ) {
-    val songs = viewModel.songs.collectAsStateWithLifecycle()
-
-    LaunchedEffect(true) {
-        viewModel.uiEvent.collect { event ->
-            when(event) {
-                UiSongsEvent.OpenPlayer -> onOpenPlayer()
-            }
-        }
-    }
-
     Scaffold(
         bottomBar = {
             NavBar(
-                onClick = { navigate(it) },
+                onClick = { if(it is Route.PlaylistsScreen) onAction(SongsAction.OnPlaylistsClick) },
                 index = 0
             )
         }
@@ -46,19 +55,29 @@ fun SongsScreen(
                 .padding(horizontal = 16.dp)
         ) {
             itemsIndexed(
-                items = songs.value,
+                items = songs,
                 key = { index, _ ->
                     index
                 }
             ) { index, song ->
                 SongCard(
                     song = song,
-                    onClick = { viewModel.onEvent(SongsEvent.PlaySong(index)) },
+                    onClick = { onAction(SongsAction.PlaySong(index)) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 HorizontalDivider(modifier = Modifier.fillMaxWidth())
             }
         }
     }
+}
 
+@Preview
+@Composable
+private fun SongsScreenPreview() {
+    MusicPlayerTheme {
+        SongsScreen(
+            songs = emptyList(),
+            onAction = {}
+        )
+    }
 }

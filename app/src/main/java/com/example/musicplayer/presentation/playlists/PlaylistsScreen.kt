@@ -25,19 +25,39 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.musicplayer.data.local.entity.Playlist
 import com.example.musicplayer.presentation.Route
 import com.example.musicplayer.presentation.components.NavBar
+import com.example.musicplayer.ui.theme.MusicPlayerTheme
+
+@Composable
+fun PlaylistsScreenRoot(
+    viewModel: PlaylistsViewModel = hiltViewModel(),
+    onPlaylistClick: (Long) -> Unit,
+    onSongsClick: () -> Unit
+) {
+    PlaylistsScreen(
+        playlists = viewModel.playlists.collectAsStateWithLifecycle().value,
+        onAction = { action ->
+            when(action) {
+                PlaylistsAction.OnSongsClick -> onSongsClick()
+                is PlaylistsAction.OnPlaylistClick -> onPlaylistClick(action.id)
+                else -> Unit
+            }
+            viewModel.onAction(action)
+        }
+    )
+}
 
 @Composable
 fun PlaylistsScreen(
-    viewModel: PlaylistsViewModel = hiltViewModel(),
-    onPlaylistClick: (Long) -> Unit,
-    navigate: (Route) -> Unit
+    playlists: List<Playlist>,
+    onAction: (PlaylistsAction) -> Unit
 ) {
-    val playlists = viewModel.playlists.collectAsStateWithLifecycle()
     var dialogIsVisible by rememberSaveable { mutableStateOf(false) }
     var playlistName by rememberSaveable { mutableStateOf("") }
 
@@ -62,7 +82,7 @@ fun PlaylistsScreen(
                 Button(
                     enabled = playlistName.isNotBlank(),
                     onClick = {
-                        viewModel.onEvent(PlaylistsEvent.NewPlaylist(playlistName))
+                        onAction(PlaylistsAction.OnCreatePlaylistClick(playlistName))
                         dialogIsVisible = false
                         playlistName = ""
                     }
@@ -81,7 +101,7 @@ fun PlaylistsScreen(
     Scaffold(
         bottomBar = {
             NavBar(
-                onClick = { navigate(it) },
+                onClick = { if(it is Route.SongsScreen) onAction(PlaylistsAction.OnSongsClick) },
                 index = 1
             )
         }
@@ -104,7 +124,7 @@ fun PlaylistsScreen(
                 }
             }
             items(
-                items = playlists.value,
+                items = playlists,
                 key = { playlist ->
                     playlist.id ?: -1
                 }
@@ -115,11 +135,22 @@ fun PlaylistsScreen(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onPlaylistClick(playlist.id!!) }
+                        .clickable { onAction(PlaylistsAction.OnPlaylistClick(playlist.id!!)) }
                         .padding(vertical = 12.dp, horizontal = 8.dp)
                 )
                 HorizontalDivider(modifier = Modifier.fillMaxWidth())
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun PlaylistsScreenPreview() {
+    MusicPlayerTheme {
+        PlaylistsScreen(
+            playlists = listOf(Playlist(123L, "Playlist1")),
+            onAction = { }
+        )
     }
 }

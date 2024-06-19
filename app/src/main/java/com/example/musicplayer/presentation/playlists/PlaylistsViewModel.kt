@@ -18,15 +18,16 @@ class PlaylistsViewModel @Inject constructor(
     val playlists = playerRepository.getPlaylists()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
-    fun onEvent(event: PlaylistsEvent) {
-        when(event) {
-            is PlaylistsEvent.NewPlaylist -> {
-                if(event.name.isNotBlank()) {
+    fun onAction(action: PlaylistsAction) {
+        when(action) {
+            is PlaylistsAction.OnCreatePlaylistClick -> {
+                if(action.name.isNotBlank()) {
                     viewModelScope.launch {
-                        playerRepository.upsertPlaylist(Playlist(null, event.name))
+                        playerRepository.upsertPlaylist(Playlist(null, action.name))
                     }
                 }
             }
+            else -> Unit
         }
     }
 }

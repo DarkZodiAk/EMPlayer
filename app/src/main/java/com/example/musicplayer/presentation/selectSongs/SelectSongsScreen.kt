@@ -17,25 +17,41 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.musicplayer.presentation.components.SongCard
+import com.example.musicplayer.ui.theme.MusicPlayerTheme
+
+@Composable
+fun SelectSongsScreenRoot(
+    viewModel: SelectSongsViewModel = hiltViewModel(),
+    onBack: () -> Unit
+) {
+    SelectSongsScreen(
+        state = viewModel.state,
+        onAction = { action ->
+            when(action) {
+                SelectSongsAction.OnBackClick -> onBack()
+                SelectSongsAction.OnConfirmClick -> onBack()
+                else -> Unit
+            }
+            viewModel.onAction(action)
+        }
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectSongsScreen(
-    viewModel: SelectSongsViewModel = hiltViewModel(),
-    onBack: () -> Unit
+    state: SelectSongsState,
+    onAction: (SelectSongsAction) -> Unit
 ) {
-    val songs = viewModel.songs.collectAsStateWithLifecycle()
-    val selectedSongs = viewModel.selectedSongs
-
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { onAction(SelectSongsAction.OnBackClick) }) {
                         Icon(imageVector = Icons.AutoMirrored.Default.ArrowBack, contentDescription = null)
                     }
                 },
@@ -44,10 +60,8 @@ fun SelectSongsScreen(
                 },
                 actions = {
                     IconButton(
-                        onClick = {
-                            viewModel.onEvent(SelectSongsEvent.Confirm)
-                            onBack()
-                        }) {
+                        onClick = { onAction(SelectSongsAction.OnConfirmClick) })
+                    {
                         Icon(imageVector = Icons.Default.Done, contentDescription = null)
                     }
                 }
@@ -60,36 +74,43 @@ fun SelectSongsScreen(
                 .padding(horizontal = 16.dp)
         ) {
             items(
-                items = songs.value,
+                items = state.songs,
                 key = { song ->
                     song.id
                 }
             ) { song ->
                 SongCard(
                     song = song,
-                    onClick = {
-                        if(song.id in selectedSongs) {
-                            viewModel.onEvent(SelectSongsEvent.DeleteSong(song.id))
-                        } else {
-                            viewModel.onEvent(SelectSongsEvent.AddSong(song.id))
-                        }
-                    },
+                    onClick = { songSelection(song.id, state.selectedSongs, onAction) },
                     modifier = Modifier.fillMaxWidth(),
                     action = {
                         RadioButton(
-                            selected = song.id in selectedSongs,
-                            onClick = {
-                                if(song.id in selectedSongs) {
-                                    viewModel.onEvent(SelectSongsEvent.DeleteSong(song.id))
-                                } else {
-                                    viewModel.onEvent(SelectSongsEvent.AddSong(song.id))
-                                }
-                            },
+                            selected = song.id in state.selectedSongs,
+                            onClick = { songSelection(song.id, state.selectedSongs, onAction) },
                             modifier = Modifier.align(Alignment.Center)
                         )
                     }
                 )
             }
         }
+    }
+}
+
+private fun songSelection(songId: Long, selectedSongs: List<Long>, onSelect: (SelectSongsAction) -> Unit) {
+    if(songId in selectedSongs) {
+        onSelect(SelectSongsAction.DeleteSong(songId))
+    } else {
+        onSelect(SelectSongsAction.AddSong(songId))
+    }
+}
+
+@Preview
+@Composable
+private fun SelectSongsScreenPreview() {
+    MusicPlayerTheme {
+        SelectSongsScreen(
+            state = SelectSongsState(),
+            onAction = {}
+        )
     }
 }

@@ -49,7 +49,7 @@ class MainViewModel @Inject constructor(
 
     private fun launchAudioObserver() {
         viewModelScope.launch {
-            audioObserver.observeAudio().collect{ }
+            audioObserver.observeAudio()
         }
     }
 }

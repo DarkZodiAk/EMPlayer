@@ -7,15 +7,12 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.data.AudioPlayer
-import com.example.musicplayer.data.local.entity.Audio
 import com.example.musicplayer.data.local.entity.Playlist
 import com.example.musicplayer.domain.PlayerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -29,58 +26,56 @@ class PlaylistViewModel @Inject constructor(
     private var playlistJob: Job? = null
     private var songsJob: Job? = null
 
-    var playlist by mutableStateOf(Playlist(null, ""))
+    var state by mutableStateOf(PlaylistState())
         private set
-    var songs by mutableStateOf(listOf<Audio>())
-        private set
-
-    private val channel = Channel<UiPlaylistEvent>()
-    val uiEvent = channel.receiveAsFlow()
 
     init {
-        savedStateHandle.get<Long>("id")?.let { id ->
+        savedStateHandle.get<Long>("playlistId")?.let { id ->
             playlistJob = playerRepository.getPlaylistById(id)
                 .onEach {
-                    playlist = it ?: Playlist(null, "")
+                    state = state.copy(
+                        playlist = it ?: Playlist(null, "")
+                    )
                 }.launchIn(viewModelScope)
             songsJob = playerRepository.getSongsFromPlaylist(id)
                 .onEach {
-                    songs = it
+                    state = state.copy(
+                        songs = it
+                    )
                 }.launchIn(viewModelScope)
         }
     }
 
-    fun onEvent(event: PlaylistEvent) {
-        when(event) {
-            PlaylistEvent.DeletePlaylist -> {
+    fun onAction(action: PlaylistAction) {
+        when(action) {
+            PlaylistAction.OnDeletePlaylistClick -> {
                 viewModelScope.launch {
                     playlistJob?.cancel()
                     songsJob?.cancel()
-                    playerRepository.deletePlaylist(playlist)
+                    playerRepository.deletePlaylist(state.playlist)
                 }
             }
-            is PlaylistEvent.RemoveSongFromPlaylist -> {
+            is PlaylistAction.OnRemoveSongFromPlaylistClick -> {
                 viewModelScope.launch {
-                    playerRepository.deleteAudioFromPlaylist(playlist.id!!, event.songId)
+                    playerRepository.deleteAudioFromPlaylist(state.playlist.id!!, action.songId)
                 }
             }
-            is PlaylistEvent.RenamePlaylist -> {
-                if(event.newName.isNotBlank()){
+            is PlaylistAction.OnRenamePlaylistClick -> {
+                if(action.newName.isNotBlank()){
                     viewModelScope.launch {
                         playerRepository.upsertPlaylist(
-                            playlist.copy(name = event.newName)
+                            state.playlist.copy(name = action.newName)
                         )
                     }
                 }
             }
-            is PlaylistEvent.PlaySong -> {
-                audioPlayer.setPlaylist(songs)
-                audioPlayer.setAudioIndex(event.index)
-                viewModelScope.launch {
-                    channel.send(UiPlaylistEvent.OpenPlayer)
-                }
+            is PlaylistAction.OnSongClick -> {
+                audioPlayer.setPlaylist(state.songs)
+                audioPlayer.setAudioIndex(action.index)
                 //audioPlayer.play()
             }
+
+            else -> Unit
         }
     }
 }

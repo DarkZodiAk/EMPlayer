@@ -5,11 +5,11 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.musicplayer.presentation.player.PlayerScreen
-import com.example.musicplayer.presentation.playlist.PlaylistScreen
-import com.example.musicplayer.presentation.playlists.PlaylistsScreen
-import com.example.musicplayer.presentation.selectSongs.SelectSongsScreen
-import com.example.musicplayer.presentation.songs.SongsScreen
+import com.example.musicplayer.presentation.player.PlayerScreenRoot
+import com.example.musicplayer.presentation.playlist.PlaylistScreenRoot
+import com.example.musicplayer.presentation.playlists.PlaylistsScreenRoot
+import com.example.musicplayer.presentation.selectSongs.SelectSongsScreenRoot
+import com.example.musicplayer.presentation.songs.SongsScreenRoot
 
 @Composable
 fun NavRoot(
@@ -24,21 +24,23 @@ fun NavRoot(
             modifier = modifier
         ) {
             composable<Route.SongsScreen> {
-                SongsScreen(
+                SongsScreenRoot(
                     onOpenPlayer = { navController.navigate(Route.PlayerScreen) },
-                    navigate = { navController.navigate(it) }
+                    onPlaylistsClick = { navController.navigate(Route.PlaylistsScreen) }
                 )
             }
             composable<Route.PlaylistsScreen> {
-                PlaylistsScreen(
+                PlaylistsScreenRoot(
                     onPlaylistClick = {
                         navController.navigate(Route.PlaylistScreen(playlistId = it))
                     },
-                    navigate = { navController.navigate(it) }
+                    onSongsClick = {
+                        navController.navigate(Route.SongsScreen)
+                    }
                 )
             }
             composable<Route.PlaylistScreen> {
-                PlaylistScreen(
+                PlaylistScreenRoot(
                     onOpenPlayer = { navController.navigate(Route.PlayerScreen) },
                     onAddSongsClick = {
                         navController.navigate(Route.SelectSongsScreen(playlistId = it))
@@ -46,13 +48,11 @@ fun NavRoot(
                     onBack = { navController.navigateUp() }
                 )
             }
-            composable<Route.SongsScreen> {
-                SelectSongsScreen(onBack = { navController.navigateUp() })
+            composable<Route.SelectSongsScreen> {
+                SelectSongsScreenRoot(onBack = { navController.navigateUp() })
             }
             composable<Route.PlayerScreen> {
-                PlayerScreen(
-                    onBack = { navController.navigateUp() }
-                )
+                PlayerScreenRoot(onBack = { navController.navigateUp() })
             }
         }
     }
