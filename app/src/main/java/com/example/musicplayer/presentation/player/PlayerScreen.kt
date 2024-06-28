@@ -28,7 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.musicplayer.domain.parseDuration
+import com.example.musicplayer.presentation.parseDuration
 import com.example.musicplayer.ui.theme.MusicPlayerTheme
 
 
@@ -93,7 +93,7 @@ fun PlayerScreen(
         ) {
             Text(text = state.playingSong.title)
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = state.playingSong.artist)
+            Text(text = state.playingSong.artistName)
             Spacer(modifier = Modifier.height(16.dp))
             Text(text = parseDuration(state.currentTime))
             Spacer(modifier = Modifier.height(16.dp))

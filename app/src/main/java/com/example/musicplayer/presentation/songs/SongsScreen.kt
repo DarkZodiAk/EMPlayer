@@ -56,8 +56,8 @@ fun SongsScreen(
         ) {
             itemsIndexed(
                 items = songs,
-                key = { index, _ ->
-                    index
+                key = { _, song ->
+                    song.id
                 }
             ) { index, song ->
                 SongCard(

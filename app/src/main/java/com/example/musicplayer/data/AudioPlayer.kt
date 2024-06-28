@@ -2,6 +2,7 @@ package com.example.musicplayer.data
 
 import android.net.Uri
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.exoplayer.ExoPlayer
@@ -12,8 +13,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class AudioPlayer(
+@Singleton
+class AudioPlayer @Inject constructor(
     private val player: ExoPlayer
 ) {
 
@@ -22,6 +26,7 @@ class AudioPlayer(
     val isPlayingFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1, replay = 1)
     val currentAudio = MutableSharedFlow<Audio>(extraBufferCapacity = 1, replay = 1)
     val currentTime = MutableSharedFlow<Long>(extraBufferCapacity = 1, replay = 1)
+    val isError = MutableSharedFlow<Boolean>()
 
     private val scope = CoroutineScope(Dispatchers.Main)
 
@@ -35,6 +40,20 @@ class AudioPlayer(
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             scope.launch {
                 currentAudio.emit(playlist[player.currentMediaItemIndex])
+            }
+
+        }
+
+        override fun onPlayerError(error: PlaybackException) {
+            if(error.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND){
+                scope.launch {
+                    isError.emit(true)
+                }
+                next()
+                scope.launch {
+                    isError.emit(false)
+                }
+                play()
             }
         }
 

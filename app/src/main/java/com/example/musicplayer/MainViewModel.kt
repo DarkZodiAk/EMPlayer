@@ -1,13 +1,11 @@
 package com.example.musicplayer
 
-import android.Manifest
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.data.AudioObserver
-import com.example.musicplayer.data.PermissionObserver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -16,40 +14,34 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val audioObserver: AudioObserver,
-    private val permissionObserver: PermissionObserver
+    private val audioObserver: AudioObserver
 ) : ViewModel() {
-    var hasReadPermission by mutableStateOf(false)
+
+    var state by mutableStateOf(MainState())
         private set
-    var isLoaded by mutableStateOf(false)
-        private set
 
-    private val channel = Channel<UiMainEvent>()
-    val uiPermissionChannel = channel.receiveAsFlow()
+    private val channel = Channel<MainEvent>()
+    val event = channel.receiveAsFlow()
 
-    init {
-        checkReadPermission()
-    }
-
-    fun checkReadPermission() {
-        hasReadPermission = permissionObserver.checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
-        if(!hasReadPermission) {
-            openPermissionDialog()
-        } else {
-            isLoaded = true
-            launchAudioObserver()
+    fun onAction(action: MainAction) {
+        when(action) {
+            is MainAction.SubmitReadPermissionInfo -> {
+                if(!action.isGranted && action.shouldShowRationale) {
+                    viewModelScope.launch {
+                        channel.send(MainEvent.RequestReadPermission)
+                    }
+                } else if(!action.isGranted) {
+                    state = state.copy(showReadSettingsDialog = true)
+                } else {
+                    state = state.copy(isLoaded = true, showReadSettingsDialog = false)
+                    audioObserver.startObservingAudio()
+                }
+            }
         }
     }
 
-    private fun openPermissionDialog() {
-        viewModelScope.launch {
-            channel.send(UiMainEvent.AskForPermission(Manifest.permission.READ_EXTERNAL_STORAGE))
-        }
-    }
-
-    private fun launchAudioObserver() {
-        viewModelScope.launch {
-            audioObserver.observeAudio()
-        }
+    override fun onCleared() {
+        super.onCleared()
+        audioObserver.stopObservingAudio()
     }
 }

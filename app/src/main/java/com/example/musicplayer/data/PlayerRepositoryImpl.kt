@@ -7,8 +7,9 @@ import com.example.musicplayer.data.local.entity.AudioPlaylistCross
 import com.example.musicplayer.data.local.entity.Playlist
 import com.example.musicplayer.domain.PlayerRepository
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
-class PlayerRepositoryImpl(
+class PlayerRepositoryImpl @Inject constructor(
     private val playlistDao: PlaylistDao,
     private val audioDao: AudioDao
 ): PlayerRepository {

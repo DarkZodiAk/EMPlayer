@@ -7,19 +7,22 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun PermissionDialog(
+    title: String,
+    text: String,
+    buttonText: String,
     onClick: () -> Unit
 ) {
     AlertDialog(
         title = {
-            Text(text = "Требуется разрешение")
+            Text(text = title)
         },
         text = {
-            Text(text = "Для того, чтобы проигрывать музыку, нужен доступ к медиафайлам на вашем устройстве")
+            Text(text = text)
         },
         onDismissRequest = { },
         confirmButton = {
             Button(onClick = onClick) {
-                Text(text = "Открыть настройки")
+                Text(text = buttonText)
             }
         }
     )

@@ -16,7 +16,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.musicplayer.data.local.entity.Audio
-import com.example.musicplayer.domain.parseDuration
+import com.example.musicplayer.presentation.parseDuration
 
 @Composable
 fun SongCard(
@@ -41,7 +41,7 @@ fun SongCard(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = song.artist,
+                text = song.artistName,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )

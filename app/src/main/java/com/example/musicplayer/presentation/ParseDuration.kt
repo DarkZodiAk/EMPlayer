@@ -1,4 +1,4 @@
-package com.example.musicplayer.domain
+package com.example.musicplayer.presentation
 
 fun parseDuration(duration: Long): String {
     val seconds = (duration / 1000) % 60

@@ -7,9 +7,16 @@ import androidx.room.PrimaryKey
 data class Audio(
     @PrimaryKey
     val id: Long = -1,
-    val title: String = "",
-    val artist: String = "",
-    val duration: Long = 0,
     val uri: String = "",
-    val dateModified: Long = 0
+    val title: String = "",
+    val artistId: Long = -1,
+    val artistName: String = "",
+    val albumId: Long = -1,
+    val albumName: String = "",
+    val duration: Long = -1,
+    val track: Long = -1,
+    val data: String = "",
+    val size: Long = 0,
+    val dateModified: Long = -1,
+    val dateAdded: Long = -1
 )

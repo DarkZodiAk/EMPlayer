@@ -17,7 +17,7 @@ class SongsViewModel @Inject constructor(
 ) : ViewModel() {
 
     var songs = playerRepository.getAllAudio()
-        .map { it.sortedBy { it.dateModified }.reversed() }
+        .map { it.sortedBy { it.title } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     fun onAction(action: SongsAction) {

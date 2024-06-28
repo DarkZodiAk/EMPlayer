@@ -25,12 +25,9 @@ class SelectSongsViewModel @Inject constructor(
 
     private var playlistId = -1L
 
-    /*private val selectedSongIds = mutableStateListOf<Long>()
-    val selectedSongs: List<Long> = selectedSongIds */
-
     init {
         playerRepository.getAllAudio()
-            .map { it.sortedBy { it.dateModified }.reversed() }
+            .map { it.sortedBy { it.title } }
             .onEach { state = state.copy(songs = it) }
             .launchIn(viewModelScope)
         savedStateHandle.get<Long>("playlistId")?.let { id ->
