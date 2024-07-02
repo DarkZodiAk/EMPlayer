@@ -7,39 +7,34 @@ import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.musicplayer.data.local.entity.Audio
+import com.example.musicplayer.domain.AudioPlayerState
+import com.example.musicplayer.domain.PlayerEventBus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class AudioPlayer @Inject constructor(
-    private val player: ExoPlayer
+    private val player: ExoPlayer,
 ) {
-
     private var playlist = emptyList<Audio>()
-
-    val isPlayingFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1, replay = 1)
-    val currentAudio = MutableSharedFlow<Audio>(extraBufferCapacity = 1, replay = 1)
-    val currentTime = MutableSharedFlow<Long>(extraBufferCapacity = 1, replay = 1)
-    val isError = MutableSharedFlow<Boolean>()
-
+    private var playerState = AudioPlayerState()
     private val scope = CoroutineScope(Dispatchers.Main)
 
     private val listener = object : Player.Listener {
         override fun onTimelineChanged(timeline: Timeline, reason: Int) {
             scope.launch {
-                currentTime.emit(player.currentPosition)
+                updateAudioPlayerState(currentTime = player.currentPosition)
             }
         }
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             scope.launch {
-                currentAudio.emit(playlist[player.currentMediaItemIndex])
+                updateAudioPlayerState(currentAudio = playlist[player.currentMediaItemIndex])
             }
 
         }
@@ -47,11 +42,11 @@ class AudioPlayer @Inject constructor(
         override fun onPlayerError(error: PlaybackException) {
             if(error.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND){
                 scope.launch {
-                    isError.emit(true)
+                    updateAudioPlayerState(isError = true)
                 }
                 next()
                 scope.launch {
-                    isError.emit(false)
+                    updateAudioPlayerState(isError = false)
                 }
                 play()
             }
@@ -59,7 +54,7 @@ class AudioPlayer @Inject constructor(
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             scope.launch {
-                isPlayingFlow.emit(isPlaying)
+                updateAudioPlayerState(isPlaying = isPlaying)
             }
         }
     }
@@ -73,7 +68,7 @@ class AudioPlayer @Inject constructor(
     private fun launchTimeUpdater() {
         timeUpdater = scope.launch {
             while(true) {
-                currentTime.emit(player.currentPosition)
+                updateAudioPlayerState(currentTime = player.currentPosition)
                 delay(100L)
             }
         }
@@ -122,5 +117,20 @@ class AudioPlayer @Inject constructor(
         return audio.map {
             MediaItem.fromUri(Uri.parse(it.uri))
         }
+    }
+
+    private suspend fun updateAudioPlayerState(
+        currentAudio: Audio? = null,
+        isPlaying: Boolean? = null,
+        currentTime: Long? = null,
+        isError: Boolean? = null
+    ) {
+        playerState = playerState.copy(
+            currentAudio = currentAudio ?: playerState.currentAudio,
+            isPlaying = isPlaying ?: playerState.isPlaying,
+            currentTime = currentTime ?: playerState.currentTime,
+            isError = isError ?: playerState.isError
+        )
+        PlayerEventBus.sendState(playerState)
     }
 }

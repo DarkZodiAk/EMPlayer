@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.data.AudioPlayer
+import com.example.musicplayer.domain.PlayerEventBus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.launchIn
@@ -25,12 +26,14 @@ class PlayerViewModel @Inject constructor(
     val uiEvent = channel.receiveAsFlow()
 
     init {
-        audioPlayer.currentAudio.onEach { state = state.copy(playingSong = it) }.launchIn(viewModelScope)
-        audioPlayer.isPlayingFlow.onEach { state = state.copy(isPlaying = it) }.launchIn(viewModelScope)
-        audioPlayer.currentTime.onEach { state = state.copy(currentTime = it) }.launchIn(viewModelScope)
-        audioPlayer.isError
-            .onEach { if(it) channel.send(PlayerEvent.Error) }
-            .launchIn(viewModelScope)
+        PlayerEventBus.playerBus.onEach { playerState ->
+            state = state.copy(
+                playingSong = playerState.currentAudio,
+                isPlaying = playerState.isPlaying,
+                currentTime = playerState.currentTime
+            )
+            if(playerState.isError) channel.send(PlayerEvent.Error)
+        }.launchIn(viewModelScope)
         audioPlayer.play()
     }
 
