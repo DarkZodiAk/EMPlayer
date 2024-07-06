@@ -49,9 +49,7 @@ class PlayerViewModel @Inject constructor(
                 if(state.isPlaying) audioPlayer.pause()
                 else audioPlayer.play()
             }
-            PlayerAction.OnBackClick -> {
-                audioPlayer.stop()
-            }
+            else -> Unit
         }
     }
 }

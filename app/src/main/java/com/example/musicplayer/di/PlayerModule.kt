@@ -47,4 +47,13 @@ object PlayerModule {
         player.repeatMode = Player.REPEAT_MODE_ALL
         return player
     }
+
+    @Provides
+    @Singleton
+    fun providesMediaSession(
+        @ApplicationContext context: Context,
+        player: ExoPlayer
+    ): MediaSession {
+        return MediaSession.Builder(context, player).build()
+    }
 }

@@ -2,9 +2,11 @@ package com.example.musicplayer.presentation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navDeepLink
 import com.example.musicplayer.presentation.player.PlayerScreenRoot
 import com.example.musicplayer.presentation.playlist.PlaylistScreenRoot
 import com.example.musicplayer.presentation.playlists.PlaylistsScreenRoot
@@ -51,7 +53,10 @@ fun NavRoot(
             composable<Route.SelectSongsScreen> {
                 SelectSongsScreenRoot(onBack = { navController.navigateUp() })
             }
-            composable<Route.PlayerScreen> {
+            composable<Route.PlayerScreen>(
+                deepLinks = listOf(navDeepLink { uriPattern = "mplayer://player" })
+            ) {
+                val context = LocalContext.current
                 PlayerScreenRoot(onBack = { navController.navigateUp() })
             }
         }

@@ -55,12 +55,12 @@ class MainActivity : FragmentActivity() {
 
                 LaunchedEffect(key1 = true) {
                     lockOrientation()
-                    permissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     viewModel.event.collect { event ->
                         when(event) {
                             MainEvent.RequestReadPermission -> {
                                 lockOrientation()
-                                permissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                                permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                             }
                         }
                     }
@@ -102,12 +102,12 @@ class MainActivity : FragmentActivity() {
 }
 
 fun ComponentActivity.shouldShowReadPermissionRationale(): Boolean {
-    return shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)
+    return shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)
 }
 
 fun Context.hasReadPermission(): Boolean {
     return ContextCompat.checkSelfPermission(
         this,
-        Manifest.permission.READ_EXTERNAL_STORAGE
+        Manifest.permission.WRITE_EXTERNAL_STORAGE
     ) == PackageManager.PERMISSION_GRANTED
 }

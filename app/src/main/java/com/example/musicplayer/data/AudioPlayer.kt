@@ -1,14 +1,18 @@
 package com.example.musicplayer.data
 
+import android.content.Context
 import android.net.Uri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.exoplayer.ExoPlayer
+import com.example.musicplayer.MainActivity
 import com.example.musicplayer.data.local.entity.Audio
 import com.example.musicplayer.domain.AudioPlayerState
 import com.example.musicplayer.domain.PlayerEventBus
+import com.example.musicplayer.notification.PlayerService
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -19,7 +23,8 @@ import javax.inject.Singleton
 
 @Singleton
 class AudioPlayer @Inject constructor(
-    private val player: ExoPlayer,
+    @ApplicationContext private val context: Context,
+    private val player: ExoPlayer
 ) {
     private var playlist = emptyList<Audio>()
     private var playerState = AudioPlayerState()
@@ -69,7 +74,7 @@ class AudioPlayer @Inject constructor(
         timeUpdater = scope.launch {
             while(true) {
                 updateAudioPlayerState(currentTime = player.currentPosition)
-                delay(100L)
+                delay(75L)
             }
         }
     }
@@ -90,6 +95,9 @@ class AudioPlayer @Inject constructor(
     fun play() {
         if(player.availableCommands.contains(Player.COMMAND_PREPARE)) {
             player.prepare()
+        }
+        if(!PlayerService.isServiceActive.value) {
+            context.startService(PlayerService.buildStartIntent(context, MainActivity::class.java))
         }
         launchTimeUpdater()
         player.play()
