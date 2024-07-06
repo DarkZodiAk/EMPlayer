@@ -11,6 +11,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import androidx.annotation.OptIn
+import androidx.compose.runtime.snapshotFlow
 import androidx.core.app.NotificationCompat
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
@@ -22,7 +23,6 @@ import com.example.musicplayer.data.NextSongReceiver
 import com.example.musicplayer.data.PauseResumeReceiver
 import com.example.musicplayer.data.PrevSongReceiver
 import com.example.musicplayer.data.StopReceiver
-import com.example.musicplayer.domain.PlayerEventBus
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -153,10 +153,16 @@ class PlayerService: Service() {
     }
 
     private fun updateNotification() {
-        PlayerEventBus.playerBus.onEach { state ->
-            playerState = state
-            notificationManager.notify(1, buildNotification(state.isPlaying))
-        }.launchIn(scope)
+        snapshotFlow { player.playerState.isPlaying }
+            .onEach {
+                playerState = player.playerState
+                notificationManager.notify(1, buildNotification(playerState.isPlaying))
+            }.launchIn(scope)
+        snapshotFlow { player.playerState.currentAudio }
+            .onEach {
+                playerState = player.playerState
+                notificationManager.notify(1, buildNotification(playerState.isPlaying))
+            }.launchIn(scope)
     }
 
     private fun stop() {

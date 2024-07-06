@@ -3,10 +3,10 @@ package com.example.musicplayer.presentation.player
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.data.AudioPlayer
-import com.example.musicplayer.domain.PlayerEventBus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.launchIn
@@ -26,7 +26,7 @@ class PlayerViewModel @Inject constructor(
     val uiEvent = channel.receiveAsFlow()
 
     init {
-        PlayerEventBus.playerBus.onEach { playerState ->
+        snapshotFlow { audioPlayer.playerState }.onEach { playerState ->
             state = state.copy(
                 playingSong = playerState.currentAudio,
                 isPlaying = playerState.isPlaying,
@@ -34,6 +34,7 @@ class PlayerViewModel @Inject constructor(
             )
             if(playerState.isError) channel.send(PlayerEvent.Error)
         }.launchIn(viewModelScope)
+
         audioPlayer.play()
     }
 

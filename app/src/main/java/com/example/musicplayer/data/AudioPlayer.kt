@@ -2,6 +2,9 @@ package com.example.musicplayer.data
 
 import android.content.Context
 import android.net.Uri
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -10,7 +13,6 @@ import androidx.media3.exoplayer.ExoPlayer
 import com.example.musicplayer.MainActivity
 import com.example.musicplayer.data.local.entity.Audio
 import com.example.musicplayer.domain.AudioPlayerState
-import com.example.musicplayer.domain.PlayerEventBus
 import com.example.musicplayer.notification.PlayerService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -27,8 +29,9 @@ class AudioPlayer @Inject constructor(
     private val player: ExoPlayer
 ) {
     private var playlist = emptyList<Audio>()
-    private var playerState = AudioPlayerState()
     private val scope = CoroutineScope(Dispatchers.Main)
+    var playerState by mutableStateOf(AudioPlayerState())
+        private set
 
     private val listener = object : Player.Listener {
         override fun onTimelineChanged(timeline: Timeline, reason: Int) {
@@ -58,9 +61,7 @@ class AudioPlayer @Inject constructor(
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
-            scope.launch {
-                updateAudioPlayerState(isPlaying = isPlaying)
-            }
+            updateAudioPlayerState(isPlaying = isPlaying)
         }
     }
 
@@ -104,21 +105,23 @@ class AudioPlayer @Inject constructor(
     }
 
     fun pause() {
-        stopTimeUpdater()
         player.pause()
+        stopTimeUpdater()
     }
 
     fun next() {
         player.seekToNextMediaItem()
+        play()
     }
 
     fun previous() {
         player.seekToPreviousMediaItem()
+        play()
     }
 
     fun stop() {
-        stopTimeUpdater()
         player.stop()
+        stopTimeUpdater()
     }
 
     private fun getMediaItemsFromAudio(audio: List<Audio>): List<MediaItem> {
@@ -127,7 +130,7 @@ class AudioPlayer @Inject constructor(
         }
     }
 
-    private suspend fun updateAudioPlayerState(
+    private fun updateAudioPlayerState(
         currentAudio: Audio? = null,
         isPlaying: Boolean? = null,
         currentTime: Long? = null,
@@ -139,6 +142,11 @@ class AudioPlayer @Inject constructor(
             currentTime = currentTime ?: playerState.currentTime,
             isError = isError ?: playerState.isError
         )
-        PlayerEventBus.sendState(playerState)
+        /*_playerState.update { it.copy(
+            currentAudio = currentAudio ?: it.currentAudio,
+            isPlaying = isPlaying ?: it.isPlaying,
+            currentTime = currentTime ?: it.currentTime,
+            isError = isError ?: it.isError)
+        }*/
     }
 }
