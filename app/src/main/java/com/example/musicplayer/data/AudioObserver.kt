@@ -3,8 +3,12 @@ package com.example.musicplayer.data
 import android.content.ContentUris
 import android.content.Context
 import android.database.ContentObserver
+import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
+import android.util.Size
+import androidx.core.net.toUri
 import com.example.musicplayer.data.local.entity.Audio
 import com.example.musicplayer.domain.PlayerRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -12,6 +16,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.io.FileNotFoundException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -21,6 +26,7 @@ class AudioObserver @Inject constructor(
     private val playerRepository: PlayerRepository
 ) {
     private val contentResolver = context.contentResolver
+    private val packageName = context.packageName
     private val scope = CoroutineScope(Dispatchers.IO)
     private val contentObserver = object : ContentObserver(null) {
         override fun onChange(selfChange: Boolean) { scope.launch { loadAllAudio() } }
@@ -33,6 +39,8 @@ class AudioObserver @Inject constructor(
         ) { scope.launch { loadAllAudio() } }
     }
     private var isObserving = false
+
+    private val emptyAlbumArts = mutableSetOf<String>()
 
     private suspend fun loadAllAudio() {
         val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
@@ -74,6 +82,7 @@ class AudioObserver @Inject constructor(
                     if (albumName == null) {
                         albumName = "Unknown"
                     }
+                    val albumArt = getAlbumArtForId(albumId)
 
                     val duration =
                         cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION))
@@ -96,7 +105,6 @@ class AudioObserver @Inject constructor(
                     } catch (_: IllegalArgumentException) {
                     }
 
-
                     newAudio.add(
                         Audio(
                             id,
@@ -106,6 +114,7 @@ class AudioObserver @Inject constructor(
                             artistName,
                             albumId,
                             albumName,
+                            albumArt,
                             duration.toLong(),
                             track.toLong(),
                             data,
@@ -126,6 +135,25 @@ class AudioObserver @Inject constructor(
         }
         newAudio.forEach { audio ->
             playerRepository.upsertAudio(audio)
+        }
+    }
+
+
+    private fun getAlbumArtForId(albumId: Long): String {
+        val albumArt = ContentUris.withAppendedId(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI, albumId).toString()
+        if(albumArt in emptyAlbumArts)
+            return "android.resource://$packageName/drawable/music_icon"
+
+        return try {
+            if (Build.VERSION.SDK_INT < 29) {
+                BitmapFactory.decodeFile(albumArt)
+            } else {
+                contentResolver.loadThumbnail(albumArt.toUri(), Size(20, 20), null)
+            }
+            albumArt
+        } catch (e: FileNotFoundException) {
+            emptyAlbumArts.add(albumArt)
+            "android.resource://$packageName/drawable/music_icon"
         }
     }
 

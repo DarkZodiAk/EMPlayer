@@ -119,6 +119,10 @@ class AudioPlayer @Inject constructor(
         play()
     }
 
+    fun setPosition(position: Long) {
+        player.seekTo(position)
+    }
+
     fun stop() {
         player.stop()
         stopTimeUpdater()
@@ -142,11 +146,5 @@ class AudioPlayer @Inject constructor(
             currentTime = currentTime ?: playerState.currentTime,
             isError = isError ?: playerState.isError
         )
-        /*_playerState.update { it.copy(
-            currentAudio = currentAudio ?: it.currentAudio,
-            isPlaying = isPlaying ?: it.isPlaying,
-            currentTime = currentTime ?: it.currentTime,
-            isError = isError ?: it.isError)
-        }*/
     }
 }

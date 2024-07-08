@@ -50,6 +50,9 @@ class PlayerViewModel @Inject constructor(
                 if(state.isPlaying) audioPlayer.pause()
                 else audioPlayer.play()
             }
+            is PlayerAction.OnSongPositionSet -> {
+                audioPlayer.setPosition(action.position)
+            }
             else -> Unit
         }
     }

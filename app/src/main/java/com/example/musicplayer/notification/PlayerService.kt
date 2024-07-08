@@ -135,7 +135,10 @@ class PlayerService: Service() {
 
     @OptIn(UnstableApi::class)
     private fun buildNotification(isPlaying: Boolean): Notification {
-        return baseNotification
+        val notification = if(playerState.currentAudio.uri == "") baseNotification
+            else baseNotification.setLargeIcon(getBitmapForAudio(this, playerState.currentAudio))
+
+        return notification
             .setContentTitle(playerState.currentAudio.title)
             .setContentText(playerState.currentAudio.artistName)
             .setContentIntent(pendingActivityIntent!!)

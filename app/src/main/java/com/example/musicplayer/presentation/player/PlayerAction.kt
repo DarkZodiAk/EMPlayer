@@ -5,4 +5,5 @@ sealed interface PlayerAction {
     object OnNextSongClick: PlayerAction
     object OnPrevSongClick: PlayerAction
     object OnBackClick: PlayerAction
+    data class OnSongPositionSet(val position: Long): PlayerAction
 }

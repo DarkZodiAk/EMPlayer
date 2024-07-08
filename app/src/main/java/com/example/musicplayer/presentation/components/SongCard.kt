@@ -9,16 +9,20 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.example.musicplayer.data.local.entity.Audio
-import com.example.musicplayer.presentation.parseDuration
 
 @Composable
+@Stable
 fun SongCard(
     song: Audio,
     onClick: () -> Unit,
@@ -29,8 +33,17 @@ fun SongCard(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = modifier
             .clickable(onClick = onClick)
-            .padding(vertical = 12.dp, horizontal = 8.dp)
+            .padding(vertical = 8.dp, horizontal = 8.dp)
     ) {
+        AsyncImage(
+            model = song.albumArt,
+            contentDescription = null,
+            modifier = Modifier
+                .width(52.dp)
+                .height(52.dp)
+                .clip(RoundedCornerShape(8.dp))
+        )
+        Spacer(modifier = Modifier.width(8.dp))
         Column(
             modifier = Modifier.weight(3f)
         ) {
@@ -46,11 +59,6 @@ fun SongCard(
                 overflow = TextOverflow.Ellipsis
             )
         }
-        Text(
-            text = parseDuration(song.duration),
-            modifier = Modifier.weight(1f),
-            textAlign = TextAlign.Right
-        )
 
         action?.let {
             Box(modifier = Modifier.weight(1f)) {

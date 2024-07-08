@@ -13,6 +13,7 @@ data class Audio(
     val artistName: String = "",
     val albumId: Long = -1,
     val albumName: String = "",
+    val albumArt: String = "",
     val duration: Long = -1,
     val track: Long = -1,
     val data: String = "",

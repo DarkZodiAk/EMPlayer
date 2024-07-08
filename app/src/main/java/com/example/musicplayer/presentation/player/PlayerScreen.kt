@@ -1,7 +1,6 @@
 package com.example.musicplayer.presentation.player
 
 import android.widget.Toast
-import android.widget.ToggleButton
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,10 +18,15 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -84,6 +88,8 @@ fun PlayerScreen(
             )
         }
     ) { padding ->
+        var selectedPosition by remember { mutableFloatStateOf(0f) }
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
@@ -114,6 +120,14 @@ fun PlayerScreen(
                     Icon(imageVector = Icons.Default.SkipNext, contentDescription = null)
                 }
             }
+            Spacer(modifier = Modifier.height(32.dp))
+            Slider(
+                value = state.currentTime.toFloat(),
+                onValueChange = { selectedPosition = it },
+                onValueChangeFinished = { onAction(PlayerAction.OnSongPositionSet(selectedPosition.toLong())) },
+                steps = 0,
+                valueRange = 0f..state.playingSong.duration.toFloat()
+            )
         }
     }
 }
