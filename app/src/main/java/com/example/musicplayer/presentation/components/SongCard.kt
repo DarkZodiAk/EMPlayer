@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -24,7 +26,9 @@ import com.example.musicplayer.data.local.entity.Audio
 @Composable
 @Stable
 fun SongCard(
-    song: Audio,
+    title: String,
+    artistName: String,
+    albumArtUri: String,
     onClick: () -> Unit,
     action: @Composable (BoxScope.() -> Unit)? = null,
     modifier: Modifier
@@ -36,27 +40,32 @@ fun SongCard(
             .padding(vertical = 8.dp, horizontal = 8.dp)
     ) {
         AsyncImage(
-            model = song.albumArt,
+            model = albumArtUri,
             contentDescription = null,
             modifier = Modifier
-                .width(52.dp)
-                .height(52.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .width(44.dp)
+                .height(44.dp)
+                .clip(RoundedCornerShape(6.dp))
         )
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(12.dp))
         Column(
-            modifier = Modifier.weight(3f)
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxHeight()
+                .weight(3f)
         ) {
             Text(
-                text = song.title,
+                text = title,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodyMedium
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = song.artistName,
+                text = artistName,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodySmall
             )
         }
 

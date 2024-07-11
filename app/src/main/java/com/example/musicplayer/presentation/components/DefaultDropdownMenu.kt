@@ -22,7 +22,7 @@ fun DefaultDropDownMenu(
                     Text(text = action.key)
                 },
                 onClick = {
-                    action.value() //ОБЯЗАТЕЛЬНО СКОБКИ - ВЫЗОВ ФУНКЦИИ
+                    action.value()
                     onDismissRequest()
                 })
         }

@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -13,22 +12,18 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.musicplayer.data.local.entity.Audio
-import com.example.musicplayer.presentation.Route
-import com.example.musicplayer.presentation.components.NavBar
 import com.example.musicplayer.presentation.components.SongCard
 import com.example.musicplayer.ui.theme.MusicPlayerTheme
 
 @Composable
 fun SongsScreenRoot(
     viewModel: SongsViewModel = hiltViewModel(),
-    onOpenPlayer: () -> Unit,
-    onPlaylistsClick: () -> Unit
+    onOpenPlayer: () -> Unit
 ) {
     SongsScreen(
         songs = viewModel.songs.collectAsStateWithLifecycle().value,
         onAction = { action ->
             when(action) {
-                SongsAction.OnPlaylistsClick -> onPlaylistsClick()
                 is SongsAction.PlaySong -> onOpenPlayer()
             }
             viewModel.onAction(action)
@@ -42,17 +37,11 @@ fun SongsScreen(
     onAction: (SongsAction) -> Unit
 ) {
     Scaffold(
-        bottomBar = {
-            NavBar(
-                onClick = { if(it is Route.PlaylistsScreen) onAction(SongsAction.OnPlaylistsClick) },
-                index = 0
-            )
-        }
     ) { padding ->
         LazyColumn(
             modifier = Modifier
                 .padding(padding)
-                .padding(horizontal = 16.dp)
+                .padding(top = 8.dp, start = 8.dp, end = 8.dp)
         ) {
             itemsIndexed(
                 items = songs,
@@ -61,11 +50,12 @@ fun SongsScreen(
                 }
             ) { index, song ->
                 SongCard(
-                    song = song,
+                    title = song.title,
+                    artistName = song.artistName,
+                    albumArtUri = song.albumArt,
                     onClick = { onAction(SongsAction.PlaySong(index)) },
                     modifier = Modifier.fillMaxWidth()
                 )
-                HorizontalDivider(modifier = Modifier.fillMaxWidth())
             }
         }
     }

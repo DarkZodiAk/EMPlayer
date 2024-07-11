@@ -1,7 +1,9 @@
 package com.example.musicplayer.presentation.player
 
 import android.widget.Toast
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
@@ -19,22 +22,30 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.musicplayer.presentation.parseDuration
+import com.example.musicplayer.presentation.player.components.PlayerSlider
 import com.example.musicplayer.ui.theme.MusicPlayerTheme
+import dev.vivvvek.seeker.Seeker
+import dev.vivvvek.seeker.SeekerDefaults
 
 
 @Composable
@@ -82,14 +93,12 @@ fun PlayerScreen(
                 title = {  },
                 navigationIcon = {
                     IconButton(onClick = { onAction(PlayerAction.OnBackClick) }) {
-                        Icon(imageVector = Icons.AutoMirrored.Default.ArrowBack, contentDescription = null)
+                        Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
                     }
                 }
             )
         }
     ) { padding ->
-        var selectedPosition by remember { mutableFloatStateOf(0f) }
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
@@ -121,12 +130,12 @@ fun PlayerScreen(
                 }
             }
             Spacer(modifier = Modifier.height(32.dp))
-            Slider(
-                value = state.currentTime.toFloat(),
-                onValueChange = { selectedPosition = it },
-                onValueChangeFinished = { onAction(PlayerAction.OnSongPositionSet(selectedPosition.toLong())) },
-                steps = 0,
-                valueRange = 0f..state.playingSong.duration.toFloat()
+            PlayerSlider(
+                currentPosition = state.currentTime,
+                endPosition = state.playingSong.duration,
+                onValueChangeFinished = { selectedPosition ->
+                    onAction(PlayerAction.OnSongPositionSet(selectedPosition.toLong()))
+                }
             )
         }
     }

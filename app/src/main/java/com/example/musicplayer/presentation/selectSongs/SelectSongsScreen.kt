@@ -80,7 +80,9 @@ fun SelectSongsScreen(
                 }
             ) { song ->
                 SongCard(
-                    song = song,
+                    title = song.title,
+                    artistName = song.artistName,
+                    albumArtUri = song.albumArt,
                     onClick = { songSelection(song.id, state.selectedSongs, onAction) },
                     modifier = Modifier.fillMaxWidth(),
                     action = {

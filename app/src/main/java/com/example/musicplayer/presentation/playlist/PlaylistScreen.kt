@@ -184,7 +184,9 @@ fun PlaylistScreen(
                 }
             ) { index, song ->
                 SongCard(
-                    song = song,
+                    title = song.title,
+                    artistName = song.artistName,
+                    albumArtUri = song.albumArt,
                     onClick = { onAction(PlaylistAction.OnSongClick(index)) },
                     modifier = Modifier.fillMaxWidth(),
                     action = {

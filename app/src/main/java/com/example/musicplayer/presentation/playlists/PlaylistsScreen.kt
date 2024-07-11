@@ -30,21 +30,17 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.musicplayer.data.local.entity.Playlist
-import com.example.musicplayer.presentation.Route
-import com.example.musicplayer.presentation.components.NavBar
 import com.example.musicplayer.ui.theme.MusicPlayerTheme
 
 @Composable
 fun PlaylistsScreenRoot(
     viewModel: PlaylistsViewModel = hiltViewModel(),
-    onPlaylistClick: (Long) -> Unit,
-    onSongsClick: () -> Unit
+    onPlaylistClick: (Long) -> Unit
 ) {
     PlaylistsScreen(
         playlists = viewModel.playlists.collectAsStateWithLifecycle().value,
         onAction = { action ->
             when(action) {
-                PlaylistsAction.OnSongsClick -> onSongsClick()
                 is PlaylistsAction.OnPlaylistClick -> onPlaylistClick(action.id)
                 else -> Unit
             }
@@ -99,12 +95,7 @@ fun PlaylistsScreen(
     }
 
     Scaffold(
-        bottomBar = {
-            NavBar(
-                onClick = { if(it is Route.SongsScreen) onAction(PlaylistsAction.OnSongsClick) },
-                index = 1
-            )
-        }
+
     ) { padding ->
         LazyColumn(
             modifier = Modifier

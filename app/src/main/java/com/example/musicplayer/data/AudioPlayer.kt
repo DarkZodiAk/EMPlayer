@@ -106,7 +106,7 @@ class AudioPlayer @Inject constructor(
 
     fun pause() {
         player.pause()
-        stopTimeUpdater()
+        //stopTimeUpdater()
     }
 
     fun next() {

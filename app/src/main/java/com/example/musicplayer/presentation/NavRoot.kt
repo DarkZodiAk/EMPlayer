@@ -1,17 +1,28 @@
 package com.example.musicplayer.presentation
 
+import android.annotation.SuppressLint
+import android.os.Bundle
+import android.util.Log
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.EaseIn
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import com.example.musicplayer.presentation.player.PlayerScreenRoot
 import com.example.musicplayer.presentation.playlist.PlaylistScreenRoot
-import com.example.musicplayer.presentation.playlists.PlaylistsScreenRoot
 import com.example.musicplayer.presentation.selectSongs.SelectSongsScreenRoot
-import com.example.musicplayer.presentation.songs.SongsScreenRoot
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.onEach
 
 @Composable
 fun NavRoot(
@@ -22,23 +33,13 @@ fun NavRoot(
     if(isLoaded) {
         NavHost(
             navController = navController,
-            startDestination = Route.SongsScreen,
+            startDestination = Route.MainScreen,
             modifier = modifier
         ) {
-            composable<Route.SongsScreen> {
-                SongsScreenRoot(
-                    onOpenPlayer = { navController.navigate(Route.PlayerScreen) },
-                    onPlaylistsClick = { navController.navigate(Route.PlaylistsScreen) }
-                )
-            }
-            composable<Route.PlaylistsScreen> {
-                PlaylistsScreenRoot(
-                    onPlaylistClick = {
-                        navController.navigate(Route.PlaylistScreen(playlistId = it))
-                    },
-                    onSongsClick = {
-                        navController.navigate(Route.SongsScreen)
-                    }
+            composable<Route.MainScreen> {
+                MainScreenRoot(
+                    songsOnOpenPlayer = { navController.navigate(Route.PlayerScreen) },
+                    playlistsOnPlaylistClick = { navController.navigate(Route.PlaylistScreen(playlistId = it)) }
                 )
             }
             composable<Route.PlaylistScreen> {
@@ -54,9 +55,20 @@ fun NavRoot(
                 SelectSongsScreenRoot(onBack = { navController.navigateUp() })
             }
             composable<Route.PlayerScreen>(
-                deepLinks = listOf(navDeepLink { uriPattern = "mplayer://player" })
+                deepLinks = listOf(navDeepLink { uriPattern = "mplayer://player" }),
+                enterTransition = {
+                    slideIntoContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Up,
+                        animationSpec = tween(300)
+                    )
+                },
+                popExitTransition = {
+                    slideOutOfContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Down,
+                        animationSpec = tween(300)
+                    )
+                }
             ) {
-                val context = LocalContext.current
                 PlayerScreenRoot(onBack = { navController.navigateUp() })
             }
         }
