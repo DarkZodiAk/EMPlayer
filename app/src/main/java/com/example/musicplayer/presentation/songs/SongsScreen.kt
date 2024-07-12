@@ -36,8 +36,7 @@ fun SongsScreen(
     songs: List<Audio>,
     onAction: (SongsAction) -> Unit
 ) {
-    Scaffold(
-    ) { padding ->
+    Scaffold { padding ->
         LazyColumn(
             modifier = Modifier
                 .padding(padding)

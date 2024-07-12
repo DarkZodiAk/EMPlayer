@@ -1,28 +1,20 @@
 package com.example.musicplayer.presentation
 
-import android.annotation.SuppressLint
-import android.os.Bundle
-import android.util.Log
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.core.EaseIn
-import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.NavController
-import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
+import com.example.musicplayer.presentation.home.HomeScreenRoot
 import com.example.musicplayer.presentation.player.PlayerScreenRoot
 import com.example.musicplayer.presentation.playlist.PlaylistScreenRoot
 import com.example.musicplayer.presentation.selectSongs.SelectSongsScreenRoot
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.onEach
+
 
 @Composable
 fun NavRoot(
@@ -33,11 +25,14 @@ fun NavRoot(
     if(isLoaded) {
         NavHost(
             navController = navController,
-            startDestination = Route.MainScreen,
+            startDestination = Route.HomeScreen,
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
             modifier = modifier
         ) {
-            composable<Route.MainScreen> {
-                MainScreenRoot(
+            composable<Route.HomeScreen> {
+                HomeScreenRoot(
+                    onOpenPlayer = { navController.navigate(Route.PlayerScreen) },
                     songsOnOpenPlayer = { navController.navigate(Route.PlayerScreen) },
                     playlistsOnPlaylistClick = { navController.navigate(Route.PlaylistScreen(playlistId = it)) }
                 )
@@ -62,7 +57,7 @@ fun NavRoot(
                         animationSpec = tween(300)
                     )
                 },
-                popExitTransition = {
+                exitTransition = {
                     slideOutOfContainer(
                         towards = AnimatedContentTransitionScope.SlideDirection.Down,
                         animationSpec = tween(300)

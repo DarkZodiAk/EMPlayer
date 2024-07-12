@@ -175,7 +175,7 @@ fun PlaylistScreen(
         LazyColumn(
             modifier = Modifier
                 .padding(padding)
-                .padding(16.dp)
+                .padding(top = 8.dp, start = 8.dp, end = 8.dp)
         ) {
             itemsIndexed(
                 items = state.songs,

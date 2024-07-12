@@ -71,7 +71,7 @@ fun SelectSongsScreen(
         LazyColumn(
             modifier = Modifier
                 .padding(padding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 8.dp)
         ) {
             items(
                 items = state.songs,

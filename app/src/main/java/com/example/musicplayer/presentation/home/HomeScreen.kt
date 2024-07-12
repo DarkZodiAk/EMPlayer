@@ -1,11 +1,12 @@
-package com.example.musicplayer.presentation
+package com.example.musicplayer.presentation.home
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -13,21 +14,46 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.musicplayer.data.local.entity.Audio
+import com.example.musicplayer.presentation.home.components.PlayerBar
 import com.example.musicplayer.presentation.playlists.PlaylistsScreenRoot
 import com.example.musicplayer.presentation.songs.SongsScreenRoot
 import kotlinx.coroutines.launch
 
-
 @Composable
-fun MainScreenRoot(
+fun HomeScreenRoot(
+    viewModel: HomeViewModel = hiltViewModel(),
+    onOpenPlayer: () -> Unit,
     songsOnOpenPlayer: () -> Unit,
     playlistsOnPlaylistClick: (Long) -> Unit,
 ) {
-    var selectedTabIndex by remember {
+    HomeScreen(
+        state = viewModel.state,
+        songsOnOpenPlayer = songsOnOpenPlayer,
+        playlistsOnPlaylistClick = playlistsOnPlaylistClick,
+        onAction = { action ->
+            when(action) {
+                HomeAction.OnPlayerBarClick -> onOpenPlayer()
+                else -> Unit
+            }
+            viewModel.onAction(action)
+        }
+    )
+}
+
+@Composable
+fun HomeScreen(
+    state: HomeState,
+    songsOnOpenPlayer: () -> Unit,
+    playlistsOnPlaylistClick: (Long) -> Unit,
+    onAction: (HomeAction) -> Unit
+) {
+    var selectedTabIndex by rememberSaveable {
         mutableIntStateOf(0)
     }
     val pagerState = rememberPagerState(pageCount = { TabItem.entries.size })
@@ -37,9 +63,11 @@ fun MainScreenRoot(
         selectedTabIndex = pagerState.currentPage
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
         ) {
             TabRow(selectedTabIndex = selectedTabIndex) {
                 TabItem.entries.forEachIndexed { index, tabItem ->
@@ -52,7 +80,7 @@ fun MainScreenRoot(
                             selectedTabIndex = index
                         },
                         text = {
-                            Text(text = tabItem.name)
+                            Text(text = tabItem.title)
                         }
                     )
                 }
@@ -68,8 +96,18 @@ fun MainScreenRoot(
                     TabItem.PLAYLISTS.ordinal -> PlaylistsScreenRoot(onPlaylistClick = playlistsOnPlaylistClick)
                 }
             }
-        }
 
+            if(state.playingSong != Audio()){
+                PlayerBar(
+                    song = state.playingSong,
+                    isPlaying = state.isPlaying,
+                    currentProgress = state.currentProgress.toFloat(),
+                    songDuration = state.playingSong.duration.toFloat(),
+                    onClick = { onAction(HomeAction.OnPlayerBarClick) },
+                    onPlayPauseClick = { onAction(HomeAction.OnPlayPauseClick) }
+                )
+            }
+        }
     }
 }
 
