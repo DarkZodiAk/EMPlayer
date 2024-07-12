@@ -5,9 +5,9 @@ fun parseDuration(duration: Long): String {
     val minutes = (duration / (1000 * 60) % 60)
     val hours = (duration / (1000 * 60 * 60) % 24)
 
-    var result = String.format("%02d:%02d", minutes, seconds)
+    var result = String.format("%01d:%02d", minutes, seconds)
     if(hours != 0L) {
-        result = String.format("%02d:", hours) + result
+        result = String.format("%01d:", hours) + result
     }
 
     return result

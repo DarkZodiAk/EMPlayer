@@ -83,6 +83,7 @@ fun SelectSongsScreen(
                     title = song.title,
                     artistName = song.artistName,
                     albumArtUri = song.albumArt,
+                    isPlaying = false,
                     onClick = { songSelection(song.id, state.selectedSongs, onAction) },
                     modifier = Modifier.fillMaxWidth(),
                     action = {

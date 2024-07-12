@@ -30,6 +30,7 @@ fun SongCard(
     title: String,
     artistName: String,
     albumArtUri: String,
+    isPlaying: Boolean,
     onClick: () -> Unit,
     action: @Composable (BoxScope.() -> Unit)? = null,
     modifier: Modifier
@@ -57,7 +58,8 @@ fun SongCard(
                     text = title,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if(isPlaying) MaterialTheme.colorScheme.primary else Color.Unspecified
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(

@@ -10,8 +10,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.musicplayer.data.local.entity.Audio
 import com.example.musicplayer.presentation.components.SongCard
 import com.example.musicplayer.ui.theme.MusicPlayerTheme
 
@@ -21,7 +19,7 @@ fun SongsScreenRoot(
     onOpenPlayer: () -> Unit
 ) {
     SongsScreen(
-        songs = viewModel.songs.collectAsStateWithLifecycle().value,
+        state = viewModel.state,
         onAction = { action ->
             when(action) {
                 is SongsAction.PlaySong -> onOpenPlayer()
@@ -33,7 +31,7 @@ fun SongsScreenRoot(
 
 @Composable
 fun SongsScreen(
-    songs: List<Audio>,
+    state: SongsState,
     onAction: (SongsAction) -> Unit
 ) {
     Scaffold { padding ->
@@ -43,7 +41,7 @@ fun SongsScreen(
                 .padding(top = 8.dp, start = 8.dp, end = 8.dp)
         ) {
             itemsIndexed(
-                items = songs,
+                items = state.songs,
                 key = { _, song ->
                     song.id
                 }
@@ -52,6 +50,7 @@ fun SongsScreen(
                     title = song.title,
                     artistName = song.artistName,
                     albumArtUri = song.albumArt,
+                    isPlaying = song == state.playingSong,
                     onClick = { onAction(SongsAction.PlaySong(index)) },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -65,7 +64,7 @@ fun SongsScreen(
 private fun SongsScreenPreview() {
     MusicPlayerTheme {
         SongsScreen(
-            songs = emptyList(),
+            state = SongsState(),
             onAction = {}
         )
     }

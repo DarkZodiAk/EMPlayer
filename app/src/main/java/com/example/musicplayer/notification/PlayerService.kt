@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 import com.example.musicplayer.R
-import com.example.musicplayer.domain.AudioPlayerState
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 
 @AndroidEntryPoint
@@ -52,7 +52,7 @@ class PlayerService: Service() {
 
     private var scope = CoroutineScope(Dispatchers.Main)
 
-    private var playerState = AudioPlayerState()
+    private var playerState = PlayerServiceState()
 
 
     private var activityIntent: Intent? = null
@@ -158,12 +158,13 @@ class PlayerService: Service() {
     private fun updateNotification() {
         snapshotFlow { player.playerState.isPlaying }
             .onEach {
-                playerState = player.playerState
+                playerState = playerState.copy(isPlaying = it)
                 notificationManager.notify(1, buildNotification(playerState.isPlaying))
             }.launchIn(scope)
         snapshotFlow { player.playerState.currentAudio }
+            .filterNotNull()
             .onEach {
-                playerState = player.playerState
+                playerState = playerState.copy(currentAudio = it)
                 notificationManager.notify(1, buildNotification(playerState.isPlaying))
             }.launchIn(scope)
     }

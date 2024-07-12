@@ -187,6 +187,7 @@ fun PlaylistScreen(
                     title = song.title,
                     artistName = song.artistName,
                     albumArtUri = song.albumArt,
+                    isPlaying = song == state.playingSong,
                     onClick = { onAction(PlaylistAction.OnSongClick(index)) },
                     modifier = Modifier.fillMaxWidth(),
                     action = {

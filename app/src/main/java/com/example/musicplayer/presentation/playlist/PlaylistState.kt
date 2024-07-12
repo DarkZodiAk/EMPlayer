@@ -5,5 +5,6 @@ import com.example.musicplayer.data.local.entity.Playlist
 
 data class PlaylistState(
     val playlist: Playlist = Playlist(null, ""),
-    val songs: List<Audio> = emptyList()
+    val songs: List<Audio> = emptyList(),
+    val playingSong: Audio? = null
 )

@@ -3,6 +3,7 @@ package com.example.musicplayer.presentation.playlist
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -44,6 +45,9 @@ class PlaylistViewModel @Inject constructor(
                     )
                 }.launchIn(viewModelScope)
         }
+        snapshotFlow { audioPlayer.playerState.currentAudio }
+            .onEach { state = state.copy(playingSong = it) }
+            .launchIn(viewModelScope)
     }
 
     fun onAction(action: PlaylistAction) {

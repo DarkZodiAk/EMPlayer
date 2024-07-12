@@ -7,6 +7,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.data.AudioPlayer
+import com.example.musicplayer.data.local.entity.Audio
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.launchIn
@@ -28,7 +29,7 @@ class PlayerViewModel @Inject constructor(
     init {
         snapshotFlow { audioPlayer.playerState }.onEach { playerState ->
             state = state.copy(
-                playingSong = playerState.currentAudio,
+                playingSong = playerState.currentAudio ?: Audio(),
                 isPlaying = playerState.isPlaying,
                 currentProgress = playerState.currentTime
             )

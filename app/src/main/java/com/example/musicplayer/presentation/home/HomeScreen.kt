@@ -19,7 +19,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.musicplayer.data.local.entity.Audio
 import com.example.musicplayer.presentation.home.components.PlayerBar
 import com.example.musicplayer.presentation.playlists.PlaylistsScreenRoot
 import com.example.musicplayer.presentation.songs.SongsScreenRoot
@@ -97,7 +96,7 @@ fun HomeScreen(
                 }
             }
 
-            if(state.playingSong != Audio()){
+            state.playingSong?.let {
                 PlayerBar(
                     song = state.playingSong,
                     isPlaying = state.isPlaying,
