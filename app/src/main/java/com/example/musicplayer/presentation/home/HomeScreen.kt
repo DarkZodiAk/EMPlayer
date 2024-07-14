@@ -62,7 +62,9 @@ fun HomeScreen(
         selectedTabIndex = pagerState.currentPage
     }
 
-    Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
+    Scaffold(
+        modifier = Modifier.fillMaxSize()
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
