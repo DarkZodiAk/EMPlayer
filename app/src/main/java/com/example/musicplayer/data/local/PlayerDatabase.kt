@@ -10,7 +10,7 @@ import com.example.musicplayer.data.local.entity.Playlist
 
 @Database(
     entities = [Playlist::class, Audio::class, AudioPlaylistCross::class],
-    version = 1
+    version = 3
 )
 abstract class PlayerDatabase: RoomDatabase() {
     abstract val playlistDao: PlaylistDao

@@ -26,7 +26,8 @@ object PlayerModule {
             context,
             PlayerDatabase::class.java,
             PlayerDatabase.DB_NAME
-        ).build()
+        ).fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides

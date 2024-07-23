@@ -11,5 +11,6 @@ sealed interface Route {
     data class SelectSongsScreen(val playlistId: Long): Route
     @Serializable
     object PlayerScreen: Route
-
+    @Serializable
+    object SearchScreen: Route
 }

@@ -13,6 +13,7 @@ import androidx.navigation.navDeepLink
 import com.example.musicplayer.presentation.home.HomeScreenRoot
 import com.example.musicplayer.presentation.player.PlayerScreenRoot
 import com.example.musicplayer.presentation.playlist.PlaylistScreenRoot
+import com.example.musicplayer.presentation.search.SearchScreenRoot
 import com.example.musicplayer.presentation.selectSongs.SelectSongsScreenRoot
 
 
@@ -33,6 +34,7 @@ fun NavRoot(
             composable<Route.HomeScreen> {
                 HomeScreenRoot(
                     onOpenPlayer = { navController.navigate(Route.PlayerScreen) },
+                    onOpenSearch = { navController.navigate(Route.SearchScreen) },
                     songsOnOpenPlayer = { navController.navigate(Route.PlayerScreen) },
                     playlistsOnPlaylistClick = { navController.navigate(Route.PlaylistScreen(playlistId = it)) }
                 )
@@ -65,6 +67,9 @@ fun NavRoot(
                 }
             ) {
                 PlayerScreenRoot(onBack = { navController.navigateUp() })
+            }
+            composable<Route.SearchScreen> {
+                SearchScreenRoot()
             }
         }
     }
