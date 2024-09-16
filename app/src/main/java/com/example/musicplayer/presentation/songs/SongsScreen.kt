@@ -61,7 +61,7 @@ fun SongsScreen(
         LazyColumn(
             modifier = Modifier
                 .padding(padding)
-                .padding(top = 8.dp, start = 8.dp, end = 8.dp)
+                .padding(horizontal = 8.dp)
         ) {
             item {
                 Row(

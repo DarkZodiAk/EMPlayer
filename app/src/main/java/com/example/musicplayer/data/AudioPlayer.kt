@@ -12,7 +12,6 @@ import androidx.media3.common.Timeline
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.musicplayer.MainActivity
 import com.example.musicplayer.data.local.entity.Audio
-import com.example.musicplayer.domain.AudioPlayerState
 import com.example.musicplayer.notification.PlayerService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -106,7 +105,7 @@ class AudioPlayer @Inject constructor(
 
     fun pause() {
         player.pause()
-        //stopTimeUpdater()
+        //stopTimeUpdater() TODO(What I was trying to do here?)
     }
 
     fun next() {

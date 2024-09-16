@@ -57,7 +57,6 @@ fun PlaylistsScreen(
     var dialogIsVisible by rememberSaveable { mutableStateOf(false) }
     var playlistName by rememberSaveable { mutableStateOf("") }
 
-
     if(dialogIsVisible){
         AlertDialog(
             onDismissRequest = { dialogIsVisible = false },
@@ -94,9 +93,7 @@ fun PlaylistsScreen(
         )
     }
 
-    Scaffold(
-
-    ) { padding ->
+    Scaffold { padding ->
         LazyColumn(
             modifier = Modifier
                 .padding(padding)

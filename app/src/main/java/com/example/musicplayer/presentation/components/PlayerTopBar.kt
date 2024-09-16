@@ -33,13 +33,13 @@ fun PlayerTopBar(
         modifier = modifier
             .background(MaterialTheme.colorScheme.surface)
             .fillMaxWidth()
-            .padding(horizontal = 32.dp, vertical = 4.dp)
+            .padding(horizontal = 16.dp, vertical = 4.dp)
     ) {
         Text(
             text = title,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.displaySmall
+            style = MaterialTheme.typography.titleMedium
         )
         Row {
             actions()

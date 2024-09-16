@@ -69,7 +69,10 @@ fun NavRoot(
                 PlayerScreenRoot(onBack = { navController.navigateUp() })
             }
             composable<Route.SearchScreen> {
-                SearchScreenRoot()
+                SearchScreenRoot(
+                    onOpenPlayer = { navController.navigate(Route.PlayerScreen) },
+                    onBack = { navController.navigateUp() }
+                )
             }
         }
     }
