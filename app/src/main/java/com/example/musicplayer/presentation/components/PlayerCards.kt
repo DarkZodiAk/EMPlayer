@@ -26,11 +26,11 @@ import coil.compose.AsyncImage
 
 @Composable
 @Stable
-fun SongCard(
+fun PlayerCard(
     title: String,
-    artistName: String,
-    albumArtUri: String,
-    isPlaying: Boolean,
+    subtitle: String,
+    imageUri: String,
+    titleColor: Color = Color.Unspecified,
     onClick: () -> Unit,
     action: @Composable (BoxScope.() -> Unit)? = null,
     modifier: Modifier
@@ -43,7 +43,7 @@ fun SongCard(
     ) {
         Row(modifier = Modifier.weight(8f)) {
             AsyncImage(
-                model = albumArtUri,
+                model = imageUri,
                 contentDescription = null,
                 modifier = Modifier
                     .size(44.dp)
@@ -59,11 +59,11 @@ fun SongCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if(isPlaying) MaterialTheme.colorScheme.primary else Color.Unspecified
+                    color = titleColor
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = artistName,
+                    text = subtitle,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodySmall,
@@ -78,4 +78,46 @@ fun SongCard(
             }
         }
     }
+}
+
+@Composable
+@Stable
+fun SongCard(
+    title: String,
+    artistName: String,
+    albumArtUri: String,
+    isPlaying: Boolean,
+    onClick: () -> Unit,
+    action: @Composable (BoxScope.() -> Unit)? = null,
+    modifier: Modifier
+) {
+    PlayerCard(
+        title = title,
+        subtitle = artistName,
+        imageUri = albumArtUri,
+        titleColor = if(isPlaying) MaterialTheme.colorScheme.primary else Color.Unspecified,
+        onClick = onClick,
+        action = action,
+        modifier = modifier
+    )
+}
+
+@Composable
+@Stable
+fun PlaylistCard(
+    name: String,
+    songsCount: String,
+    imageUri: String,
+    onClick: () -> Unit,
+    action: @Composable (BoxScope.() -> Unit)? = null,
+    modifier: Modifier
+) {
+    PlayerCard(
+        title = name,
+        subtitle = songsCount,
+        imageUri = imageUri,
+        onClick = onClick,
+        action = action,
+        modifier = modifier
+    )
 }

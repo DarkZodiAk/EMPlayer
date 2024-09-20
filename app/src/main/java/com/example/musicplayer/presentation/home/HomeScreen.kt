@@ -97,7 +97,7 @@ fun HomeScreen(
                 },
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.surface)
-                    .height(40.dp)
+                    .height(44.dp)
                     .padding(start = 8.dp, end = 8.dp, top = 4.dp)
             )
         },

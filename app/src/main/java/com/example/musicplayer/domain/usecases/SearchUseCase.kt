@@ -11,8 +11,7 @@ class SearchUseCase @Inject constructor(
 ) {
     operator fun invoke(searchQuery: String): Flow<List<Audio>> {
         return repository.getAllAudio().map {
-            if(searchQuery.isBlank()) emptyList()
-            else it.filter { song ->
+            it.filter { song ->
                 song.title.contains(searchQuery, ignoreCase = true) || song.artistName.contains(searchQuery, ignoreCase = true)
             }
         }

@@ -18,12 +18,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -61,6 +65,7 @@ fun PlaylistScreen(
     state: PlaylistState,
     onAction: (PlaylistAction) -> Unit
 ) {
+    val focusRequester = remember { FocusRequester() }
     var dropdownMenuIsVisible by rememberSaveable { mutableStateOf(false) }
     var deleteDialogIsVisible by rememberSaveable { mutableStateOf(false) }
     var renameDialogIsVisible by rememberSaveable { mutableStateOf(false) }
@@ -81,7 +86,8 @@ fun PlaylistScreen(
                     supportingText = {
                         if(newName.isBlank())
                             Text(text = "Имя не должно быть пустым")
-                    }
+                    },
+                    modifier = Modifier.focusRequester(focusRequester)
                 )
             },
             onDismissRequest = { renameDialogIsVisible = false }, 
@@ -103,6 +109,10 @@ fun PlaylistScreen(
                 }
             }
         )
+
+        LaunchedEffect(true) {
+            focusRequester.requestFocus()
+        }
     }
     
     if(deleteDialogIsVisible) {

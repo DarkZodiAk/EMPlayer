@@ -13,9 +13,13 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -27,6 +31,8 @@ fun SearchTextField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val focusRequester = remember { FocusRequester() }
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
@@ -45,8 +51,14 @@ fun SearchTextField(
             onValueChange = onValueChange,
             textStyle = TextStyle(fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurface),
             singleLine = true,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .focusRequester(focusRequester)
         )
+    }
+
+    LaunchedEffect(true) {
+        focusRequester.requestFocus()
     }
 }
 

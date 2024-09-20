@@ -12,24 +12,27 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.musicplayer.data.local.entity.Playlist
+import com.example.musicplayer.presentation.components.PlaylistCard
 import com.example.musicplayer.ui.theme.MusicPlayerTheme
 
 @Composable
@@ -54,6 +57,7 @@ fun PlaylistsScreen(
     playlists: List<Playlist>,
     onAction: (PlaylistsAction) -> Unit
 ) {
+    val focusRequester = remember { FocusRequester() }
     var dialogIsVisible by rememberSaveable { mutableStateOf(false) }
     var playlistName by rememberSaveable { mutableStateOf("") }
 
@@ -70,7 +74,8 @@ fun PlaylistsScreen(
                     supportingText = {
                         if(playlistName.isBlank())
                             Text(text = "Имя не должно быть пустым")
-                    }
+                    },
+                    modifier = Modifier.focusRequester(focusRequester)
                 )
             },
             confirmButton = {
@@ -91,13 +96,17 @@ fun PlaylistsScreen(
                 }
             }
         )
+
+        LaunchedEffect(true) {
+            focusRequester.requestFocus()
+        }
     }
 
     Scaffold { padding ->
         LazyColumn(
             modifier = Modifier
                 .padding(padding)
-                .padding(16.dp)
+                .padding(8.dp)
         ) {
             item {
                 Row(
@@ -117,16 +126,13 @@ fun PlaylistsScreen(
                     playlist.id ?: -1
                 }
             ) { playlist ->
-                Text(
-                    text = playlist.name,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onAction(PlaylistsAction.OnPlaylistClick(playlist.id!!)) }
-                        .padding(vertical = 12.dp, horizontal = 8.dp)
+                PlaylistCard(
+                    name = playlist.name,
+                    songsCount = "${playlist.songsCount} песен",
+                    imageUri = playlist.imageUri,
+                    onClick = { onAction(PlaylistsAction.OnPlaylistClick(playlist.id!!)) },
+                    modifier = Modifier.fillMaxWidth()
                 )
-                HorizontalDivider(modifier = Modifier.fillMaxWidth())
             }
         }
     }
@@ -137,7 +143,7 @@ fun PlaylistsScreen(
 private fun PlaylistsScreenPreview() {
     MusicPlayerTheme {
         PlaylistsScreen(
-            playlists = listOf(Playlist(123L, "Playlist1")),
+            playlists = listOf(Playlist(123L, "Playlist1", songsCount = 158)),
             onAction = { }
         )
     }
