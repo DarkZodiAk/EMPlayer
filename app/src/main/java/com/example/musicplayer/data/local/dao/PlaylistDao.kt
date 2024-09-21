@@ -5,7 +5,8 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Upsert
+import androidx.room.Transaction
+import androidx.room.Update
 import com.example.musicplayer.data.local.entity.Audio
 import com.example.musicplayer.data.local.entity.AudioPlaylistCross
 import com.example.musicplayer.data.local.entity.Playlist
@@ -15,8 +16,12 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface PlaylistDao {
 
-    @Upsert
-    suspend fun upsertPlaylist(playlist: Playlist)
+    @Transaction
+    @Update
+    suspend fun updatePlaylist(playlist: Playlist)
+
+    @Insert
+    suspend fun createPlaylist(playlist: Playlist)
 
     @Delete
     suspend fun deletePlaylist(playlist: Playlist)
@@ -30,9 +35,17 @@ interface PlaylistDao {
     @Query("SELECT * FROM audio WHERE id IN (SELECT audioId FROM audioplaylistcross WHERE playlistId = :playlistId)")
     fun getSongsFromPlaylist(playlistId: Long): Flow<List<Audio>>
 
+    @Query("SELECT albumArt FROM audio WHERE id IN (SELECT audioId FROM audioplaylistcross WHERE playlistId = :playlistId)")
+    fun getSongAlbumArtsFromPlaylist(playlistId: Long): Flow<List<String>>
+
+    @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addAudioToPlaylist(ref: AudioPlaylistCross)
 
+    @Transaction
     @Delete
     suspend fun deleteAudioFromPlaylist(ref: AudioPlaylistCross)
+
+    @Query("SELECT playlistId FROM audioplaylistcross WHERE audioId = :id")
+    fun getPlaylistIdsWithAudio(id: Long): Flow<List<Long>>
 }

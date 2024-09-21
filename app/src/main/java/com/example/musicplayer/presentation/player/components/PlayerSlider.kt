@@ -69,7 +69,7 @@ fun PlayerSlider(
                 .padding(horizontal = 4.dp)
         ) {
             Text(
-                text = parseDuration(currentPosition),
+                text = if(isSelectingPosition) parseDuration(selectedPosition.toLong()) else parseDuration(currentPosition),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )

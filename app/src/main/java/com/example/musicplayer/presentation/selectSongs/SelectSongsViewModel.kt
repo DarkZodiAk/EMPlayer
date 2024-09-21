@@ -1,5 +1,6 @@
 package com.example.musicplayer.presentation.selectSongs
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -57,5 +58,10 @@ class SelectSongsViewModel @Inject constructor(
 
     private fun updateSelectedSongs(selectedSongs: List<Long>) {
         state = state.copy(selectedSongs = selectedSongs)
+    }
+
+    override fun onCleared() {
+        Log.d("PLAYLIST ADD", "VIEWMODEL CLEARED")
+        super.onCleared()
     }
 }

@@ -18,4 +18,7 @@ interface AudioDao {
 
     @Query("SELECT * FROM audio")
     fun getAllAudio(): Flow<List<Audio>>
+
+    @Query("SELECT albumArt FROM audio WHERE id = :id")
+    fun getAudioAlbumArtById(id: Long): Flow<String?>
 }
