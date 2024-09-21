@@ -8,6 +8,8 @@ import androidx.room.Room
 import com.example.musicplayer.data.local.PlayerDatabase
 import com.example.musicplayer.data.local.dao.AudioDao
 import com.example.musicplayer.data.local.dao.PlaylistDao
+import com.example.musicplayer.domain.PlayerRepository
+import com.example.musicplayer.domain.PlaylistManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -57,5 +59,13 @@ object PlayerModule {
         player: ExoPlayer
     ): MediaSession {
         return MediaSession.Builder(context, player).build()
+    }
+
+    @Provides
+    @Singleton
+    fun providesPlaylistManager(
+        playerRepository: PlayerRepository
+    ): PlaylistManager {
+        return PlaylistManager(playerRepository)
     }
 }

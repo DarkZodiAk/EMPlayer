@@ -23,7 +23,7 @@ class PlaylistsViewModel @Inject constructor(
             is PlaylistsAction.OnCreatePlaylistClick -> {
                 if(action.name.isNotBlank()) {
                     viewModelScope.launch {
-                        playerRepository.upsertPlaylist(Playlist(null, action.name))
+                        playerRepository.createPlaylist(Playlist(null, action.name))
                     }
                 }
             }

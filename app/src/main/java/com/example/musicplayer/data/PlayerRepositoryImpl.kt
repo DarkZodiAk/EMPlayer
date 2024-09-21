@@ -1,20 +1,47 @@
 package com.example.musicplayer.data
 
+import android.content.Context
 import com.example.musicplayer.data.local.dao.AudioDao
 import com.example.musicplayer.data.local.dao.PlaylistDao
 import com.example.musicplayer.data.local.entity.Audio
 import com.example.musicplayer.data.local.entity.AudioPlaylistCross
 import com.example.musicplayer.data.local.entity.Playlist
 import com.example.musicplayer.domain.PlayerRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 class PlayerRepositoryImpl @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val playlistDao: PlaylistDao,
     private val audioDao: AudioDao
 ): PlayerRepository {
-    override suspend fun upsertPlaylist(playlist: Playlist) {
-        playlistDao.upsertPlaylist(playlist)
+    override suspend fun createPlaylist(playlist: Playlist) {
+        playlistDao.createPlaylist(
+            playlist.copy(imageUri = emptyImageUri)
+        )
+    }
+
+    override suspend fun updatePlaylist(playlist: Playlist) {
+        var imageUri = emptyImageUri
+
+        val songs = playlistDao.getSongsFromPlaylist(playlist.id!!).first()
+        if(playlist.imageUri == emptyImageUri){
+            songs.forEach { song ->
+                if(song.albumArt != emptyImageUri) {
+                    imageUri = song.albumArt
+                    return@forEach
+                }
+            }
+        }
+
+        playlistDao.updatePlaylist(
+            playlist.copy(
+                imageUri = imageUri,
+                songsCount = songs.size
+            )
+        )
     }
 
     override suspend fun deletePlaylist(playlist: Playlist) {
@@ -39,6 +66,8 @@ class PlayerRepositoryImpl @Inject constructor(
 
     override suspend fun deleteAudioFromPlaylist(playlistId: Long, audioId: Long) {
         playlistDao.deleteAudioFromPlaylist(AudioPlaylistCross(audioId, playlistId))
+        val playlist = playlistDao.getPlaylistById(playlistId).first()!!
+        updatePlaylist(playlist)
     }
 
     override suspend fun upsertAudio(audio: Audio) {
@@ -46,10 +75,21 @@ class PlayerRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteAudio(audio: Audio) {
+        playlistDao.getPlaylistIdsWithAudio(audio.id).first().forEach { playlistId ->
+            deleteAudioFromPlaylist(playlistId, audio.id)
+        }
         audioDao.deleteAudio(audio)
     }
 
     override fun getAllAudio(): Flow<List<Audio>> {
         return audioDao.getAllAudio()
+    }
+
+    companion object {
+        private var emptyImageUri: String = ""
+    }
+
+    init {
+        emptyImageUri.ifEmpty { emptyImageUri = "android.resource://${context.packageName}/drawable/music_icon" }
     }
 }

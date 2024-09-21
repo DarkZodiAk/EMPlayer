@@ -7,16 +7,17 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.domain.PlayerRepository
+import com.example.musicplayer.domain.PlaylistManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SelectSongsViewModel @Inject constructor(
     private val playerRepository: PlayerRepository,
+    private val playlistManager: PlaylistManager,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -46,9 +47,7 @@ class SelectSongsViewModel @Inject constructor(
             }
             SelectSongsAction.OnConfirmClick -> {
                 state.selectedSongs.forEach { songId ->
-                    viewModelScope.launch {
-                        playerRepository.addAudioToPlaylist(playlistId, songId)
-                    }
+                    playlistManager.addSong(songId, playlistId)
                 }
             }
             else -> Unit

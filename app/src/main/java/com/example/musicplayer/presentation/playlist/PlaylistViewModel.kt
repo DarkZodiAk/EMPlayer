@@ -67,7 +67,7 @@ class PlaylistViewModel @Inject constructor(
             is PlaylistAction.OnRenamePlaylistClick -> {
                 if(action.newName.isNotBlank()){
                     viewModelScope.launch {
-                        playerRepository.upsertPlaylist(
+                        playerRepository.updatePlaylist(
                             state.playlist.copy(name = action.newName)
                         )
                     }

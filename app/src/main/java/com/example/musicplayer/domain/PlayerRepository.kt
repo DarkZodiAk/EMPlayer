@@ -5,7 +5,9 @@ import com.example.musicplayer.data.local.entity.Playlist
 import kotlinx.coroutines.flow.Flow
 
 interface PlayerRepository {
-    suspend fun upsertPlaylist(playlist: Playlist)
+    suspend fun createPlaylist(playlist: Playlist)
+
+    suspend fun updatePlaylist(playlist: Playlist)
 
     suspend fun deletePlaylist(playlist: Playlist)
 
