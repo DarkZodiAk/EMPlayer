@@ -1,7 +1,6 @@
 package com.example.musicplayer.data
 
 import android.content.Context
-import android.util.Log
 import com.example.musicplayer.data.local.dao.AudioDao
 import com.example.musicplayer.data.local.dao.PlaylistDao
 import com.example.musicplayer.data.local.entity.Audio
@@ -11,7 +10,6 @@ import com.example.musicplayer.domain.PlayerRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.forEach
 import javax.inject.Inject
 
 class PlayerRepositoryImpl @Inject constructor(
@@ -26,7 +24,24 @@ class PlayerRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updatePlaylist(playlist: Playlist) {
-        playlistDao.updatePlaylist(playlist)
+        var imageUri = emptyImageUri
+
+        val songs = playlistDao.getSongsFromPlaylist(playlist.id!!).first()
+        if(playlist.imageUri == emptyImageUri){
+            songs.forEach { song ->
+                if(song.albumArt != emptyImageUri) {
+                    imageUri = song.albumArt
+                    return@forEach
+                }
+            }
+        }
+
+        playlistDao.updatePlaylist(
+            playlist.copy(
+                imageUri = imageUri,
+                songsCount = songs.size
+            )
+        )
     }
 
     override suspend fun deletePlaylist(playlist: Playlist) {
@@ -46,47 +61,13 @@ class PlayerRepositoryImpl @Inject constructor(
     }
 
     override suspend fun addAudioToPlaylist(playlistId: Long, audioId: Long) {
-        Log.d("PLAYLIST ADD START", "Add audio $audioId to $playlistId")
         playlistDao.addAudioToPlaylist(AudioPlaylistCross(audioId, playlistId))
-        Log.d("PLAYLIST ADD TO CROSS", "Add audio $audioId to $playlistId")
-        val playlist = playlistDao.getPlaylistById(playlistId).first()!!
-        val audioAlbumArt = audioDao.getAudioAlbumArtById(audioId).first()!!
-
-        var newImageUri = emptyImageUri
-        if(playlist.imageUri == emptyImageUri && audioAlbumArt != emptyImageUri) {
-            newImageUri = audioAlbumArt
-        }
-
-        Log.d("PLAYLIST ADD BEFORE UPDATE", "Add audio $audioId to $playlistId")
-        playlistDao.updatePlaylist(
-            playlist.copy(
-                imageUri = newImageUri,
-                songsCount = playlist.songsCount + 1
-            )
-        )
-        Log.d("PLAYLIST ADD FINISHED", "Add audio $audioId to $playlistId")
     }
 
     override suspend fun deleteAudioFromPlaylist(playlistId: Long, audioId: Long) {
         playlistDao.deleteAudioFromPlaylist(AudioPlaylistCross(audioId, playlistId))
         val playlist = playlistDao.getPlaylistById(playlistId).first()!!
-        val audioAlbumArt = audioDao.getAudioAlbumArtById(audioId).first()!!
-
-        var newImageUri = emptyImageUri
-        if(playlist.imageUri == audioAlbumArt) {
-            playlistDao.getSongAlbumArtsFromPlaylist(playlistId).first().forEach { albumArt ->
-                if(albumArt != emptyImageUri) {
-                    newImageUri = albumArt
-                }
-            }
-        }
-
-        playlistDao.updatePlaylist(
-            playlist.copy(
-                imageUri = newImageUri,
-                songsCount = playlist.songsCount - 1
-            )
-        )
+        updatePlaylist(playlist)
     }
 
     override suspend fun upsertAudio(audio: Audio) {

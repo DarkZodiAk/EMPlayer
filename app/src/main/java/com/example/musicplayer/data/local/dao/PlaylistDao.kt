@@ -5,7 +5,6 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Transaction
 import androidx.room.Update
 import com.example.musicplayer.data.local.entity.Audio
 import com.example.musicplayer.data.local.entity.AudioPlaylistCross
@@ -16,7 +15,6 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface PlaylistDao {
 
-    @Transaction
     @Update
     suspend fun updatePlaylist(playlist: Playlist)
 
@@ -38,11 +36,9 @@ interface PlaylistDao {
     @Query("SELECT albumArt FROM audio WHERE id IN (SELECT audioId FROM audioplaylistcross WHERE playlistId = :playlistId)")
     fun getSongAlbumArtsFromPlaylist(playlistId: Long): Flow<List<String>>
 
-    @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addAudioToPlaylist(ref: AudioPlaylistCross)
 
-    @Transaction
     @Delete
     suspend fun deleteAudioFromPlaylist(ref: AudioPlaylistCross)
 
