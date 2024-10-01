@@ -12,12 +12,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardTab
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.RepeatOne
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.example.musicplayer.domain.usecases.RepeatMode
 import com.example.musicplayer.presentation.player.components.PlayerSlider
 import com.example.musicplayer.ui.theme.MusicPlayerTheme
 
@@ -138,12 +142,22 @@ fun PlayerScreen(
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier.fillMaxWidth()
             ) {
+                IconButton(onClick = { onAction(PlayerAction.SwitchRepeatMode) }) {
+                    Icon(
+                        imageVector = when(state.repeatMode) {
+                            RepeatMode.NO_REPEAT -> Icons.AutoMirrored.Filled.KeyboardTab
+                            RepeatMode.REPEAT_ONE -> Icons.Default.RepeatOne
+                            RepeatMode.REPEAT_ALL -> Icons.Default.Repeat
+                        },
+                        contentDescription = null
+                    )
+                }
                 IconButton(onClick = { onAction(PlayerAction.OnPrevSongClick) }) {
                     Icon(imageVector = Icons.Default.SkipPrevious, contentDescription = null)
                 }
-                Spacer(modifier = Modifier.width(32.dp))
                 IconButton(
                     onClick = { onAction(PlayerAction.OnPlayPauseClick) },
                     modifier = Modifier
@@ -157,9 +171,15 @@ fun PlayerScreen(
                         tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
-                Spacer(modifier = Modifier.width(32.dp))
                 IconButton(onClick = { onAction(PlayerAction.OnNextSongClick) }) {
                     Icon(imageVector = Icons.Default.SkipNext, contentDescription = null)
+                }
+                IconButton(onClick = { onAction(PlayerAction.SwitchShuffledMode) }) {
+                    Icon(
+                        imageVector = Icons.Default.Shuffle,
+                        tint = if(state.isShuffleEnabled) MaterialTheme.colorScheme.onSurface else Color.Gray,
+                        contentDescription = null
+                    )
                 }
             }
         }

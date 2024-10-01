@@ -12,6 +12,7 @@ import androidx.media3.common.Timeline
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.musicplayer.MainActivity
 import com.example.musicplayer.data.local.entity.Audio
+import com.example.musicplayer.domain.usecases.RepeatMode
 import com.example.musicplayer.notification.PlayerService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -43,7 +44,6 @@ class AudioPlayer @Inject constructor(
             scope.launch {
                 updateAudioPlayerState(currentAudio = playlist[player.currentMediaItemIndex])
             }
-
         }
 
         override fun onPlayerError(error: PlaybackException) {
@@ -105,7 +105,7 @@ class AudioPlayer @Inject constructor(
 
     fun pause() {
         player.pause()
-        //stopTimeUpdater() TODO(What I was trying to do here?)
+        stopTimeUpdater()
     }
 
     fun next() {
@@ -127,6 +127,20 @@ class AudioPlayer @Inject constructor(
         stopTimeUpdater()
     }
 
+    fun setRepeatMode(repeatMode: RepeatMode) {
+        when(repeatMode) {
+            RepeatMode.NO_REPEAT -> { player.repeatMode = Player.REPEAT_MODE_OFF }
+            RepeatMode.REPEAT_ONE -> { player.repeatMode = Player.REPEAT_MODE_ONE }
+            RepeatMode.REPEAT_ALL -> { player.repeatMode = Player.REPEAT_MODE_ALL }
+        }
+        updateAudioPlayerState(repeatMode = repeatMode)
+    }
+
+    fun setPlaylistShuffle(enabled: Boolean) {
+        player.shuffleModeEnabled = enabled
+        updateAudioPlayerState(isShuffleEnabled = enabled)
+    }
+
     private fun getMediaItemsFromAudio(audio: List<Audio>): List<MediaItem> {
         return audio.map {
             MediaItem.fromUri(Uri.parse(it.uri))
@@ -137,13 +151,17 @@ class AudioPlayer @Inject constructor(
         currentAudio: Audio? = null,
         isPlaying: Boolean? = null,
         currentTime: Long? = null,
-        isError: Boolean? = null
+        isError: Boolean? = null,
+        repeatMode: RepeatMode? = null,
+        isShuffleEnabled: Boolean? = null
     ) {
         playerState = playerState.copy(
             currentAudio = currentAudio ?: playerState.currentAudio,
             isPlaying = isPlaying ?: playerState.isPlaying,
             currentTime = currentTime ?: playerState.currentTime,
-            isError = isError ?: playerState.isError
+            isError = isError ?: playerState.isError,
+            repeatMode = repeatMode ?: playerState.repeatMode,
+            isShuffleEnabled = isShuffleEnabled ?: playerState.isShuffleEnabled
         )
     }
 }

@@ -24,10 +24,10 @@ class PlayerRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updatePlaylist(playlist: Playlist) {
-        var imageUri = emptyImageUri
+        var imageUri = playlist.imageUri
 
         val songs = playlistDao.getSongsFromPlaylist(playlist.id!!).first()
-        if(playlist.imageUri == emptyImageUri){
+        if(imageUri == emptyImageUri){
             songs.forEach { song ->
                 if(song.albumArt != emptyImageUri) {
                     imageUri = song.albumArt

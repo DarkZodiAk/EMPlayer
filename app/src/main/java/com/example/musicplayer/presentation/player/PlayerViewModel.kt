@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.data.AudioPlayer
 import com.example.musicplayer.data.local.entity.Audio
+import com.example.musicplayer.domain.usecases.SwitchRepeatModeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.launchIn
@@ -17,7 +18,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
-    private val audioPlayer: AudioPlayer
+    private val audioPlayer: AudioPlayer,
+    private val switchRepeatModeUseCase: SwitchRepeatModeUseCase
 ) : ViewModel() {
 
     var state by mutableStateOf(PlayerState())
@@ -31,7 +33,9 @@ class PlayerViewModel @Inject constructor(
             state = state.copy(
                 playingSong = playerState.currentAudio ?: Audio(),
                 isPlaying = playerState.isPlaying,
-                currentProgress = playerState.currentTime
+                currentProgress = playerState.currentTime,
+                repeatMode = playerState.repeatMode,
+                isShuffleEnabled = playerState.isShuffleEnabled
             )
             if(playerState.isError) channel.send(PlayerEvent.Error)
         }.launchIn(viewModelScope)
@@ -50,6 +54,12 @@ class PlayerViewModel @Inject constructor(
             PlayerAction.OnPlayPauseClick -> {
                 if(state.isPlaying) audioPlayer.pause()
                 else audioPlayer.play()
+            }
+            PlayerAction.SwitchRepeatMode -> {
+                switchRepeatModeUseCase(state.repeatMode)
+            }
+            PlayerAction.SwitchShuffledMode -> {
+                audioPlayer.setPlaylistShuffle(!state.isShuffleEnabled)
             }
             is PlayerAction.OnSongPositionSet -> {
                 audioPlayer.setPosition(action.position)

@@ -1,7 +1,6 @@
 package com.example.musicplayer.di
 
 import android.content.Context
-import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.room.Room
@@ -47,9 +46,7 @@ object PlayerModule {
     @Provides
     @Singleton
     fun providesExoPlayer(@ApplicationContext context: Context): ExoPlayer {
-        val player = ExoPlayer.Builder(context).build()
-        player.repeatMode = Player.REPEAT_MODE_ALL
-        return player
+        return ExoPlayer.Builder(context).build()
     }
 
     @Provides
