@@ -13,7 +13,7 @@ Simple music player for Android written in Kotlin
 - Use string resources instead of placing plain text in screens
 - Folders & artists tabs
 - Sleep timer
-- Fix issue: the app crashes when it tries to invalid/corrupted song files
+- Fix issue: the app crashes when it tries to load invalid/corrupted song files
 
 ## About features and project structure
 - To make shuffle mode the ExoPlayer's implementation was used. It's behaviour along with playback modes is weird, so it's better to write own implementation.
