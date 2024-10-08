@@ -74,9 +74,7 @@ class PlaylistViewModel @Inject constructor(
                 }
             }
             is PlaylistAction.OnSongClick -> {
-                audioPlayer.setPlaylist(state.songs)
-                audioPlayer.setAudioIndex(action.index)
-                //audioPlayer.play()
+                audioPlayer.setPlaylist(state.songs, action.index)
             }
 
             else -> Unit

@@ -45,8 +45,7 @@ class SearchViewModel @Inject constructor(
                 state = state.copy(searchQuery = action.query)
             }
             is SearchAction.PlaySong -> {
-                audioPlayer.setPlaylist(state.songs)
-                audioPlayer.setAudioIndex(action.index)
+                audioPlayer.setPlaylist(state.songs, action.index)
             }
             else -> Unit
         }

@@ -36,9 +36,7 @@ class SongsViewModel @Inject constructor(
     fun onAction(action: SongsAction) {
         when(action) {
             is SongsAction.PlaySong -> {
-                audioPlayer.setPlaylist(state.songs)
-                audioPlayer.setAudioIndex(action.index)
-                //audioPlayer.play()
+                audioPlayer.setPlaylist(state.songs, action.index)
             }
 
             is SongsAction.SwitchSortType -> {
