@@ -16,7 +16,6 @@ Simple music player for Android written in Kotlin
 - Fix issue: the app crashes when it tries to load invalid/corrupted song files
 
 ## About features and project structure
-- To make shuffle mode the ExoPlayer's implementation was used. It's behaviour along with playback modes is weird, so it's better to write own implementation.
 - The state of player is Jetpack State, and Service uses snapshotFlow to react to changes in player state. This may not be the best solution.
 - The words "song" and "audio" are used interchangably in the project (the first one mostly in ui and domain layers, the secong in data layer). To avoid confusion, it's better to use only one word.
 - The project wasn't built in "Ideal" Clean Architecture to simplify project structure. Basically, here I'm using the KISS principle.
