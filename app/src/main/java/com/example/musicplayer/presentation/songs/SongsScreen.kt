@@ -26,7 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.musicplayer.data.local.entity.Audio
+import com.example.musicplayer.data.local.entity.Song
 import com.example.musicplayer.domain.SortDirection
 import com.example.musicplayer.domain.SortType
 import com.example.musicplayer.presentation.components.SongCard
@@ -140,7 +140,7 @@ fun SortByText(
 private fun SongsScreenPreview() {
     MusicPlayerTheme {
         SongsScreen(
-            state = SongsState(listOf(Audio(title = "OK", artistName = "Artist"))),
+            state = SongsState(listOf(Song(title = "OK", artistName = "Artist"))),
             onAction = {}
         )
     }

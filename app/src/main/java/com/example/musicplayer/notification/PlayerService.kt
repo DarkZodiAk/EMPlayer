@@ -18,7 +18,7 @@ import androidx.core.net.toUri
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaStyleNotificationHelper
-import com.example.musicplayer.data.AudioPlayer
+import com.example.musicplayer.data.SongPlayer
 import com.example.musicplayer.data.NextSongReceiver
 import com.example.musicplayer.data.PauseResumeReceiver
 import com.example.musicplayer.data.PrevSongReceiver
@@ -46,7 +46,7 @@ class PlayerService: Service() {
     }
 
     @Inject
-    lateinit var player: AudioPlayer
+    lateinit var player: SongPlayer
     @Inject
     lateinit var session: MediaSession
 
@@ -135,12 +135,12 @@ class PlayerService: Service() {
 
     @OptIn(UnstableApi::class)
     private fun buildNotification(isPlaying: Boolean): Notification {
-        val notification = if(playerState.currentAudio.uri == "") baseNotification
-            else baseNotification.setLargeIcon(getBitmapForAudio(this, playerState.currentAudio))
+        val notification = if(playerState.currentSong.uri == "") baseNotification
+            else baseNotification.setLargeIcon(getBitmapForSong(this, playerState.currentSong))
 
         return notification
-            .setContentTitle(playerState.currentAudio.title)
-            .setContentText(playerState.currentAudio.artistName)
+            .setContentTitle(playerState.currentSong.title)
+            .setContentText(playerState.currentSong.artistName)
             .setContentIntent(pendingActivityIntent!!)
             .clearActions()
             .addAction(R.drawable.close_24, "stop", stopPendingIntent!!)
@@ -161,10 +161,10 @@ class PlayerService: Service() {
                 playerState = playerState.copy(isPlaying = it)
                 notificationManager.notify(1, buildNotification(playerState.isPlaying))
             }.launchIn(scope)
-        snapshotFlow { player.playerState.currentAudio }
+        snapshotFlow { player.playerState.currentSong }
             .filterNotNull()
             .onEach {
-                playerState = playerState.copy(currentAudio = it)
+                playerState = playerState.copy(currentSong = it)
                 notificationManager.notify(1, buildNotification(playerState.isPlaying))
             }.launchIn(scope)
     }

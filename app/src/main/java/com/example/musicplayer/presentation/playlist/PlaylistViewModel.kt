@@ -7,7 +7,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.musicplayer.data.AudioPlayer
+import com.example.musicplayer.data.SongPlayer
 import com.example.musicplayer.data.local.entity.Playlist
 import com.example.musicplayer.domain.PlayerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,7 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class PlaylistViewModel @Inject constructor(
     private val playerRepository: PlayerRepository,
-    private val audioPlayer: AudioPlayer,
+    private val songPlayer: SongPlayer,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -45,7 +45,7 @@ class PlaylistViewModel @Inject constructor(
                     )
                 }.launchIn(viewModelScope)
         }
-        snapshotFlow { audioPlayer.playerState.currentAudio }
+        snapshotFlow { songPlayer.playerState.currentSong }
             .onEach { state = state.copy(playingSong = it) }
             .launchIn(viewModelScope)
     }
@@ -61,7 +61,7 @@ class PlaylistViewModel @Inject constructor(
             }
             is PlaylistAction.OnRemoveSongFromPlaylistClick -> {
                 viewModelScope.launch {
-                    playerRepository.deleteAudioFromPlaylist(state.playlist.id!!, action.songId)
+                    playerRepository.deleteSongFromPlaylist(state.playlist.id!!, action.songId)
                 }
             }
             is PlaylistAction.OnRenamePlaylistClick -> {
@@ -74,7 +74,7 @@ class PlaylistViewModel @Inject constructor(
                 }
             }
             is PlaylistAction.OnSongClick -> {
-                audioPlayer.setPlaylist(state.songs, action.index)
+                songPlayer.setPlaylist(state.songs, action.index)
             }
 
             else -> Unit

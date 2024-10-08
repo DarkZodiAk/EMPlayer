@@ -1,10 +1,10 @@
 package com.example.musicplayer.data
 
 import android.content.Context
-import com.example.musicplayer.data.local.dao.AudioDao
+import com.example.musicplayer.data.local.dao.SongDao
 import com.example.musicplayer.data.local.dao.PlaylistDao
-import com.example.musicplayer.data.local.entity.Audio
-import com.example.musicplayer.data.local.entity.AudioPlaylistCross
+import com.example.musicplayer.data.local.entity.Song
+import com.example.musicplayer.data.local.entity.SongPlaylistCross
 import com.example.musicplayer.data.local.entity.Playlist
 import com.example.musicplayer.domain.PlayerRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -15,7 +15,7 @@ import javax.inject.Inject
 class PlayerRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
     private val playlistDao: PlaylistDao,
-    private val audioDao: AudioDao
+    private val songDao: SongDao
 ): PlayerRepository {
     override suspend fun createPlaylist(playlist: Playlist) {
         playlistDao.createPlaylist(
@@ -56,33 +56,33 @@ class PlayerRepositoryImpl @Inject constructor(
         return playlistDao.getPlaylists()
     }
 
-    override fun getSongsFromPlaylist(playlistId: Long): Flow<List<Audio>> {
+    override fun getSongsFromPlaylist(playlistId: Long): Flow<List<Song>> {
         return playlistDao.getSongsFromPlaylist(playlistId)
     }
 
-    override suspend fun addAudioToPlaylist(playlistId: Long, audioId: Long) {
-        playlistDao.addAudioToPlaylist(AudioPlaylistCross(audioId, playlistId))
+    override suspend fun addSongToPlaylist(playlistId: Long, songId: Long) {
+        playlistDao.addSongToPlaylist(SongPlaylistCross(songId, playlistId))
     }
 
-    override suspend fun deleteAudioFromPlaylist(playlistId: Long, audioId: Long) {
-        playlistDao.deleteAudioFromPlaylist(AudioPlaylistCross(audioId, playlistId))
+    override suspend fun deleteSongFromPlaylist(playlistId: Long, songId: Long) {
+        playlistDao.deleteSongFromPlaylist(SongPlaylistCross(songId, playlistId))
         val playlist = playlistDao.getPlaylistById(playlistId).first()!!
         updatePlaylist(playlist)
     }
 
-    override suspend fun upsertAudio(audio: Audio) {
-        audioDao.upsertAudio(audio)
+    override suspend fun upsertSong(song: Song) {
+        songDao.upsertSong(song)
     }
 
-    override suspend fun deleteAudio(audio: Audio) {
-        playlistDao.getPlaylistIdsWithAudio(audio.id).first().forEach { playlistId ->
-            deleteAudioFromPlaylist(playlistId, audio.id)
+    override suspend fun deleteSong(song: Song) {
+        playlistDao.getPlaylistIdsWithSongs(song.id).first().forEach { playlistId ->
+            deleteSongFromPlaylist(playlistId, song.id)
         }
-        audioDao.deleteAudio(audio)
+        songDao.deleteSong(song)
     }
 
-    override fun getAllAudio(): Flow<List<Audio>> {
-        return audioDao.getAllAudio()
+    override fun getAllSongs(): Flow<List<Song>> {
+        return songDao.getAllSongs()
     }
 
     companion object {

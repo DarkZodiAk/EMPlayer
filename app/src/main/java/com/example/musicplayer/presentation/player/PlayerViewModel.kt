@@ -6,8 +6,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.musicplayer.data.AudioPlayer
-import com.example.musicplayer.data.local.entity.Audio
+import com.example.musicplayer.data.SongPlayer
+import com.example.musicplayer.data.local.entity.Song
 import com.example.musicplayer.domain.usecases.SwitchRepeatModeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -18,7 +18,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
-    private val audioPlayer: AudioPlayer,
+    private val songPlayer: SongPlayer,
     private val switchRepeatModeUseCase: SwitchRepeatModeUseCase
 ) : ViewModel() {
 
@@ -29,9 +29,9 @@ class PlayerViewModel @Inject constructor(
     val uiEvent = channel.receiveAsFlow()
 
     init {
-        snapshotFlow { audioPlayer.playerState }.onEach { playerState ->
+        snapshotFlow { songPlayer.playerState }.onEach { playerState ->
             state = state.copy(
-                playingSong = playerState.currentAudio ?: Audio(),
+                playingSong = playerState.currentSong ?: Song(),
                 isPlaying = playerState.isPlaying,
                 currentProgress = playerState.currentTime,
                 repeatMode = playerState.repeatMode,
@@ -40,29 +40,29 @@ class PlayerViewModel @Inject constructor(
             if(playerState.isError) channel.send(PlayerEvent.Error)
         }.launchIn(viewModelScope)
 
-        audioPlayer.play()
+        songPlayer.play()
     }
 
     fun onAction(action: PlayerAction) {
         when(action) {
             PlayerAction.OnNextSongClick -> {
-                audioPlayer.next()
+                songPlayer.next()
             }
             PlayerAction.OnPrevSongClick -> {
-                audioPlayer.previous()
+                songPlayer.previous()
             }
             PlayerAction.OnPlayPauseClick -> {
-                if(state.isPlaying) audioPlayer.pause()
-                else audioPlayer.play()
+                if(state.isPlaying) songPlayer.pause()
+                else songPlayer.play()
             }
             PlayerAction.SwitchRepeatMode -> {
                 switchRepeatModeUseCase(state.repeatMode)
             }
             PlayerAction.SwitchShuffledMode -> {
-                audioPlayer.setShuffleMode(!state.isShuffleEnabled)
+                songPlayer.setShuffleMode(!state.isShuffleEnabled)
             }
             is PlayerAction.OnSongPositionSet -> {
-                audioPlayer.setPosition(action.position)
+                songPlayer.setPosition(action.position)
             }
             else -> Unit
         }

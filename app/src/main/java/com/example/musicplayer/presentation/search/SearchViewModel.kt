@@ -8,8 +8,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.musicplayer.data.AudioPlayer
-import com.example.musicplayer.domain.usecases.SearchUseCase
+import com.example.musicplayer.data.SongPlayer
+import com.example.musicplayer.domain.usecases.SearchSongsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.debounce
@@ -19,8 +19,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val searchUseCase: SearchUseCase,
-    private val audioPlayer: AudioPlayer
+    private val searchSongsUseCase: SearchSongsUseCase,
+    private val songPlayer: SongPlayer
 ) : ViewModel() {
 
     private var searchSongsJob: Job? = null
@@ -34,7 +34,7 @@ class SearchViewModel @Inject constructor(
             .debounce(200L)
             .onEach { searchSongs(it) }
             .launchIn(viewModelScope)
-        snapshotFlow { audioPlayer.playerState.currentAudio }
+        snapshotFlow { songPlayer.playerState.currentSong }
             .onEach { state = state.copy(playingSong = it) }
             .launchIn(viewModelScope)
     }
@@ -45,7 +45,7 @@ class SearchViewModel @Inject constructor(
                 state = state.copy(searchQuery = action.query)
             }
             is SearchAction.PlaySong -> {
-                audioPlayer.setPlaylist(state.songs, action.index)
+                songPlayer.setPlaylist(state.songs, action.index)
             }
             else -> Unit
         }
@@ -53,7 +53,7 @@ class SearchViewModel @Inject constructor(
 
     private fun searchSongs(searchQuery: String) {
         searchSongsJob?.cancel()
-        searchSongsJob = searchUseCase(searchQuery)
+        searchSongsJob = searchSongsUseCase(searchQuery)
             .onEach { state = state.copy(songs = it) }
             .launchIn(viewModelScope)
     }

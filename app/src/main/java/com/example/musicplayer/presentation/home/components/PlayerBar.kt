@@ -30,11 +30,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import coil.compose.AsyncImage
-import com.example.musicplayer.data.local.entity.Audio
+import com.example.musicplayer.data.local.entity.Song
 
 @Composable
 fun PlayerBar(
-    song: Audio,
+    song: Song,
     isPlaying: Boolean,
     currentProgress: Float,
     songDuration: Float,
@@ -104,7 +104,7 @@ fun PlayerBar(
 @Composable
 private fun PlayerBarPreview() {
     PlayerBar(
-        song = Audio(title = "Song title", artistName = "Artist name"),
+        song = Song(title = "Song title", artistName = "Artist name"),
         isPlaying = false,
         currentProgress = 0f,
         songDuration = 0.5f,

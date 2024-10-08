@@ -9,15 +9,15 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
 import com.example.musicplayer.R
-import com.example.musicplayer.data.local.entity.Audio
+import com.example.musicplayer.data.local.entity.Song
 import java.io.FileNotFoundException
 
-fun getBitmapForAudio(context: Context, audio: Audio): Bitmap {
+fun getBitmapForSong(context: Context, song: Song): Bitmap {
     return try {
         if (Build.VERSION.SDK_INT < 29) {
-            BitmapFactory.decodeFile(audio.albumArt)
+            BitmapFactory.decodeFile(song.albumArt)
         } else {
-            context.contentResolver.loadThumbnail(audio.albumArt.toUri(), Size(400, 400), null)
+            context.contentResolver.loadThumbnail(song.albumArt.toUri(), Size(400, 400), null)
         }
     } catch (e: FileNotFoundException) {
         getImage(context, R.drawable.music_icon)

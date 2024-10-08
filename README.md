@@ -17,7 +17,6 @@ Simple music player for Android written in Kotlin
 
 ## About features and project structure
 - The state of player is Jetpack State, and Service uses snapshotFlow to react to changes in player state. This may not be the best solution.
-- The words "song" and "audio" are used interchangably in the project (the first one mostly in ui and domain layers, the secong in data layer). To avoid confusion, it's better to use only one word.
 - The project wasn't built in "Ideal" Clean Architecture to simplify project structure. Basically, here I'm using the KISS principle.
 - In presentation layer I divide screens in 2 parts: The actual screen, that only accepts it's state and onAction lambda; The root function, that holds ViewModel and other arguments.
 It provides state and onAction function to actual screen. The benefits: making previews for actual screen become painless and fast; managing screen actions become easier, cause they are processed in one function.

@@ -1,6 +1,6 @@
 package com.example.musicplayer.domain.usecases
 
-import com.example.musicplayer.data.local.entity.Audio
+import com.example.musicplayer.data.local.entity.Song
 import com.example.musicplayer.domain.PlayerRepository
 import com.example.musicplayer.domain.SortDirection
 import com.example.musicplayer.domain.SortType
@@ -11,8 +11,8 @@ import javax.inject.Inject
 class GetSongsUseCase @Inject constructor(
     private val repository: PlayerRepository
 ) {
-    operator fun invoke(sortType: SortType, sortDirection: SortDirection): Flow<List<Audio>> {
-        return repository.getAllAudio()
+    operator fun invoke(sortType: SortType, sortDirection: SortDirection): Flow<List<Song>> {
+        return repository.getAllSongs()
             .map {
                 when(sortType) {
                     SortType.TITLE -> it.sortedBy { it.title }

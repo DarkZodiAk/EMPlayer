@@ -6,8 +6,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.example.musicplayer.data.local.entity.Audio
-import com.example.musicplayer.data.local.entity.AudioPlaylistCross
+import com.example.musicplayer.data.local.entity.Song
+import com.example.musicplayer.data.local.entity.SongPlaylistCross
 import com.example.musicplayer.data.local.entity.Playlist
 
 import kotlinx.coroutines.flow.Flow
@@ -30,18 +30,18 @@ interface PlaylistDao {
     @Query("SELECT * FROM playlist WHERE id = :id")
     fun getPlaylistById(id: Long): Flow<Playlist?>
 
-    @Query("SELECT * FROM audio WHERE id IN (SELECT audioId FROM audioplaylistcross WHERE playlistId = :playlistId)")
-    fun getSongsFromPlaylist(playlistId: Long): Flow<List<Audio>>
+    @Query("SELECT * FROM song WHERE id IN (SELECT songId FROM songplaylistcross WHERE playlistId = :playlistId)")
+    fun getSongsFromPlaylist(playlistId: Long): Flow<List<Song>>
 
-    @Query("SELECT albumArt FROM audio WHERE id IN (SELECT audioId FROM audioplaylistcross WHERE playlistId = :playlistId)")
+    @Query("SELECT albumArt FROM song WHERE id IN (SELECT songId FROM songplaylistcross WHERE playlistId = :playlistId)")
     fun getSongAlbumArtsFromPlaylist(playlistId: Long): Flow<List<String>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun addAudioToPlaylist(ref: AudioPlaylistCross)
+    suspend fun addSongToPlaylist(ref: SongPlaylistCross)
 
     @Delete
-    suspend fun deleteAudioFromPlaylist(ref: AudioPlaylistCross)
+    suspend fun deleteSongFromPlaylist(ref: SongPlaylistCross)
 
-    @Query("SELECT playlistId FROM audioplaylistcross WHERE audioId = :id")
-    fun getPlaylistIdsWithAudio(id: Long): Flow<List<Long>>
+    @Query("SELECT playlistId FROM songplaylistcross WHERE songId = :id")
+    fun getPlaylistIdsWithSongs(id: Long): Flow<List<Long>>
 }

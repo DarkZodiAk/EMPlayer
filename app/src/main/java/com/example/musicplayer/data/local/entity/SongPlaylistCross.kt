@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 
 @Entity(
-    primaryKeys = ["audioId", "playlistId"],
+    primaryKeys = ["songId", "playlistId"],
     foreignKeys = arrayOf(
         ForeignKey(
             entity = Playlist::class,
@@ -13,14 +13,14 @@ import androidx.room.ForeignKey
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = Audio::class,
+            entity = Song::class,
             parentColumns = arrayOf("id"),
-            childColumns = arrayOf("audioId"),
+            childColumns = arrayOf("songId"),
             onDelete = ForeignKey.CASCADE
         )
     )
 )
-data class AudioPlaylistCross(
-    val audioId: Long,
+data class SongPlaylistCross(
+    val songId: Long,
     val playlistId: Long
 )

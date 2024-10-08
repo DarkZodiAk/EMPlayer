@@ -11,7 +11,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.musicplayer.MainActivity
-import com.example.musicplayer.data.local.entity.Audio
+import com.example.musicplayer.data.local.entity.Song
 import com.example.musicplayer.domain.usecases.RepeatMode
 import com.example.musicplayer.notification.PlayerService
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -25,33 +25,33 @@ import javax.inject.Singleton
 import kotlin.random.Random
 
 @Singleton
-class AudioPlayer @Inject constructor(
+class SongPlayer @Inject constructor(
     @ApplicationContext private val context: Context,
     private val player: ExoPlayer
 ) {
-    private var initialPlaylist = emptyList<Audio>()
-    private var currentPlaylist = emptyList<Audio>()
+    private var initialPlaylist = emptyList<Song>()
+    private var currentPlaylist = emptyList<Song>()
     private var index = 0
 
     private val scope = CoroutineScope(Dispatchers.Main)
-    var playerState by mutableStateOf(AudioPlayerState())
+    var playerState by mutableStateOf(SongPlayerState())
         private set
 
     private val listener = object : Player.Listener {
         override fun onTimelineChanged(timeline: Timeline, reason: Int) {
             scope.launch {
-                updateAudioPlayerState(currentTime = player.currentPosition)
+                updateSongPlayerState(currentTime = player.currentPosition)
             }
         }
 
         override fun onPlayerError(error: PlaybackException) {
             if(error.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND){
                 scope.launch {
-                    updateAudioPlayerState(isError = true)
+                    updateSongPlayerState(isError = true)
                 }
                 next()
                 scope.launch {
-                    updateAudioPlayerState(isError = false)
+                    updateSongPlayerState(isError = false)
                 }
                 play()
             }
@@ -64,7 +64,7 @@ class AudioPlayer @Inject constructor(
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
-            updateAudioPlayerState(isPlaying = isPlaying)
+            updateSongPlayerState(isPlaying = isPlaying)
         }
     }
 
@@ -77,7 +77,7 @@ class AudioPlayer @Inject constructor(
     private fun launchTimeUpdater() {
         timeUpdater = scope.launch {
             while(true) {
-                updateAudioPlayerState(currentTime = player.currentPosition)
+                updateSongPlayerState(currentTime = player.currentPosition)
                 delay(75L)
             }
         }
@@ -87,12 +87,12 @@ class AudioPlayer @Inject constructor(
         timeUpdater?.cancel()
     }
 
-    fun setPlaylist(audio: List<Audio>, index: Int) {
+    fun setPlaylist(songs: List<Song>, index: Int) {
         this.index = index
-        initialPlaylist = audio
-        currentPlaylist = audio
-        setMediaItemFromAudio(audio[index])
-        updateAudioPlayerState(isShuffleEnabled = false)
+        initialPlaylist = songs
+        currentPlaylist = songs
+        setMediaItemFromSong(songs[index])
+        updateSongPlayerState(isShuffleEnabled = false)
     }
 
     fun play() {
@@ -112,14 +112,14 @@ class AudioPlayer @Inject constructor(
 
     fun next() {
         index = (index + 1) % currentPlaylist.size
-        setMediaItemFromAudio(currentPlaylist[index])
+        setMediaItemFromSong(currentPlaylist[index])
         play()
     }
 
     fun previous() {
         index = (index - 1) % currentPlaylist.size
         if(index < 0) index += currentPlaylist.size
-        setMediaItemFromAudio(currentPlaylist[index])
+        setMediaItemFromSong(currentPlaylist[index])
         play()
     }
 
@@ -133,23 +133,23 @@ class AudioPlayer @Inject constructor(
     }
 
     fun setRepeatMode(repeatMode: RepeatMode) {
-        updateAudioPlayerState(repeatMode = repeatMode)
+        updateSongPlayerState(repeatMode = repeatMode)
     }
 
     fun setShuffleMode(enabled: Boolean) {
         if(enabled) {
-            val currentAudio = currentPlaylist[index]
+            val currentSong = currentPlaylist[index]
             currentPlaylist = initialPlaylist.toMutableList().apply {
                 removeAt(index)
                 shuffle(Random(System.currentTimeMillis()))
-                add(0, currentAudio)
+                add(0, currentSong)
             }
             index = 0
         } else {
             index = initialPlaylist.indexOf(currentPlaylist[index])
             currentPlaylist = initialPlaylist
         }
-        updateAudioPlayerState(isShuffleEnabled = enabled)
+        updateSongPlayerState(isShuffleEnabled = enabled)
     }
 
     private fun onSongEnded() {
@@ -169,14 +169,14 @@ class AudioPlayer @Inject constructor(
         }
     }
 
-    private fun setMediaItemFromAudio(audio: Audio) {
-        val mediaItem = MediaItem.fromUri(Uri.parse(audio.uri))
-        updateAudioPlayerState(currentAudio = audio)
+    private fun setMediaItemFromSong(song: Song) {
+        val mediaItem = MediaItem.fromUri(Uri.parse(song.uri))
+        updateSongPlayerState(currentSong = song)
         player.setMediaItem(mediaItem)
     }
 
-    private fun updateAudioPlayerState(
-        currentAudio: Audio? = null,
+    private fun updateSongPlayerState(
+        currentSong: Song? = null,
         isPlaying: Boolean? = null,
         currentTime: Long? = null,
         isError: Boolean? = null,
@@ -184,7 +184,7 @@ class AudioPlayer @Inject constructor(
         isShuffleEnabled: Boolean? = null
     ) {
         playerState = playerState.copy(
-            currentAudio = currentAudio ?: playerState.currentAudio,
+            currentSong = currentSong ?: playerState.currentSong,
             isPlaying = isPlaying ?: playerState.isPlaying,
             currentTime = currentTime ?: playerState.currentTime,
             isError = isError ?: playerState.isError,

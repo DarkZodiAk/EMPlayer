@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity
-data class Audio(
+data class Song(
     @PrimaryKey
     val id: Long = -1,
     val uri: String = "",

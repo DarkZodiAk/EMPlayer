@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.musicplayer.data.AudioPlayer
+import com.example.musicplayer.data.SongPlayer
 import com.example.musicplayer.domain.usecases.GetSongsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -17,7 +17,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SongsViewModel @Inject constructor(
     private val getSongsUseCase: GetSongsUseCase,
-    private val audioPlayer: AudioPlayer
+    private val songPlayer: SongPlayer
 ) : ViewModel() {
 
     var state by mutableStateOf(SongsState())
@@ -28,7 +28,7 @@ class SongsViewModel @Inject constructor(
     init {
         getAllSongs()
 
-        snapshotFlow { audioPlayer.playerState.currentAudio }
+        snapshotFlow { songPlayer.playerState.currentSong }
             .onEach { state = state.copy(playingSong = it) }
             .launchIn(viewModelScope)
     }
@@ -36,7 +36,7 @@ class SongsViewModel @Inject constructor(
     fun onAction(action: SongsAction) {
         when(action) {
             is SongsAction.PlaySong -> {
-                audioPlayer.setPlaylist(state.songs, action.index)
+                songPlayer.setPlaylist(state.songs, action.index)
             }
 
             is SongsAction.SwitchSortType -> {

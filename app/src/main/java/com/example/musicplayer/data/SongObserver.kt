@@ -9,7 +9,7 @@ import android.os.Build
 import android.provider.MediaStore
 import android.util.Size
 import androidx.core.net.toUri
-import com.example.musicplayer.data.local.entity.Audio
+import com.example.musicplayer.data.local.entity.Song
 import com.example.musicplayer.domain.PlayerRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -21,7 +21,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class AudioObserver @Inject constructor(
+class SongObserver @Inject constructor(
     @ApplicationContext private val context: Context,
     private val playerRepository: PlayerRepository
 ) {
@@ -29,25 +29,25 @@ class AudioObserver @Inject constructor(
     private val packageName = context.packageName
     private val scope = CoroutineScope(Dispatchers.IO)
     private val contentObserver = object : ContentObserver(null) {
-        override fun onChange(selfChange: Boolean) { scope.launch { loadAllAudio() } }
-        override fun onChange(selfChange: Boolean, uri: Uri?) { scope.launch { loadAllAudio() } }
-        override fun onChange(selfChange: Boolean, uri: Uri?, flags: Int) { scope.launch { loadAllAudio() } }
+        override fun onChange(selfChange: Boolean) { scope.launch { loadAllSongs() } }
+        override fun onChange(selfChange: Boolean, uri: Uri?) { scope.launch { loadAllSongs() } }
+        override fun onChange(selfChange: Boolean, uri: Uri?, flags: Int) { scope.launch { loadAllSongs() } }
         override fun onChange(
             selfChange: Boolean,
             uris: MutableCollection<Uri>,
             flags: Int
-        ) { scope.launch { loadAllAudio() } }
+        ) { scope.launch { loadAllSongs() } }
     }
     private var isObserving = false
 
     private val emptyAlbumArts = mutableSetOf<String>()
 
-    private suspend fun loadAllAudio() {
+    private suspend fun loadAllSongs() {
         val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         val selection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
 
-        val currentAudio = playerRepository.getAllAudio().first()
-        val newAudio = mutableListOf<Audio>()
+        val currentSongs = playerRepository.getAllSongs().first()
+        val newSong = mutableListOf<Song>()
 
         contentResolver.query(
             collection,
@@ -105,8 +105,8 @@ class AudioObserver @Inject constructor(
                     } catch (_: IllegalArgumentException) {
                     }
 
-                    newAudio.add(
-                        Audio(
+                    newSong.add(
+                        Song(
                             id,
                             contentUri.toString(),
                             title,
@@ -127,14 +127,14 @@ class AudioObserver @Inject constructor(
             }
         }
 
-        val audioRowsToDelete = currentAudio.filter { audio ->
-            newAudio.none { it.uri == audio.uri }
+        val songRowsToDelete = currentSongs.filter { song ->
+            newSong.none { it.uri == song.uri }
         }
-        audioRowsToDelete.forEach { audio ->
-            playerRepository.deleteAudio(audio)
+        songRowsToDelete.forEach { song ->
+            playerRepository.deleteSong(song)
         }
-        newAudio.forEach { audio ->
-            playerRepository.upsertAudio(audio)
+        newSong.forEach { song ->
+            playerRepository.upsertSong(song)
         }
     }
 
@@ -157,11 +157,11 @@ class AudioObserver @Inject constructor(
         }
     }
 
-     fun startObservingAudio() {
+     fun startObservingSongs() {
         if(isObserving) return
         isObserving = true
         scope.launch {
-            loadAllAudio()
+            loadAllSongs()
         }
         contentResolver.registerContentObserver(
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
@@ -170,7 +170,7 @@ class AudioObserver @Inject constructor(
         )
     }
 
-    fun stopObservingAudio() {
+    fun stopObservingSongs() {
         if(!isObserving) return
         contentResolver.unregisterContentObserver(contentObserver)
         isObserving = false

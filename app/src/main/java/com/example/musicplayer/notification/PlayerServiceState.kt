@@ -1,8 +1,8 @@
 package com.example.musicplayer.notification
 
-import com.example.musicplayer.data.local.entity.Audio
+import com.example.musicplayer.data.local.entity.Song
 
 data class PlayerServiceState(
-    val currentAudio: Audio = Audio(),
+    val currentSong: Song = Song(),
     val isPlaying: Boolean = false,
 )

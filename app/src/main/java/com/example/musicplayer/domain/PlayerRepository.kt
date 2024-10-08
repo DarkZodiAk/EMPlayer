@@ -1,6 +1,6 @@
 package com.example.musicplayer.domain
 
-import com.example.musicplayer.data.local.entity.Audio
+import com.example.musicplayer.data.local.entity.Song
 import com.example.musicplayer.data.local.entity.Playlist
 import kotlinx.coroutines.flow.Flow
 
@@ -15,15 +15,15 @@ interface PlayerRepository {
 
     fun getPlaylists(): Flow<List<Playlist>>
 
-    fun getSongsFromPlaylist(playlistId: Long): Flow<List<Audio>>
+    fun getSongsFromPlaylist(playlistId: Long): Flow<List<Song>>
 
-    suspend fun addAudioToPlaylist(playlistId: Long, audioId: Long)
+    suspend fun addSongToPlaylist(playlistId: Long, songId: Long)
 
-    suspend fun deleteAudioFromPlaylist(playlistId: Long, audioId: Long)
+    suspend fun deleteSongFromPlaylist(playlistId: Long, songId: Long)
 
-    suspend fun upsertAudio(audio: Audio)
+    suspend fun upsertSong(song: Song)
 
-    suspend fun deleteAudio(audio: Audio)
+    suspend fun deleteSong(song: Song)
 
-    fun getAllAudio(): Flow<List<Audio>>
+    fun getAllSongs(): Flow<List<Song>>
 }

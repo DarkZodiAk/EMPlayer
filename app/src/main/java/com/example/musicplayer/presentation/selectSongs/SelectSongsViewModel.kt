@@ -27,7 +27,7 @@ class SelectSongsViewModel @Inject constructor(
     private var playlistId = -1L
 
     init {
-        playerRepository.getAllAudio()
+        playerRepository.getAllSongs()
             .map { it.sortedBy { it.title } }
             .onEach { state = state.copy(songs = it) }
             .launchIn(viewModelScope)

@@ -22,14 +22,14 @@ class PlaylistManager @Inject constructor(
     private val playerRepository: PlayerRepository
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    val channel = Channel<Pair<SongId, PlaylistId>>(capacity = Channel.UNLIMITED)
+    private val channel = Channel<Pair<SongId, PlaylistId>>(capacity = Channel.UNLIMITED)
     private val flowChannel = channel.consumeAsFlow()
 
 
     init {
         flowChannel
             .onEach {
-                playerRepository.addAudioToPlaylist(it.second, it.first)
+                playerRepository.addSongToPlaylist(it.second, it.first)
             }.debounce(100L)
             .onEach {
                 val playlist = playerRepository.getPlaylistById(it.second).first()!!

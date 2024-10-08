@@ -1,10 +1,10 @@
 package com.example.musicplayer.data
 
-import com.example.musicplayer.data.local.entity.Audio
+import com.example.musicplayer.data.local.entity.Song
 import com.example.musicplayer.domain.usecases.RepeatMode
 
-data class AudioPlayerState(
-    val currentAudio: Audio? = null,
+data class SongPlayerState(
+    val currentSong: Song? = null,
     val isPlaying: Boolean = false,
     val currentTime: Long = 0L,
     val isError: Boolean = false,

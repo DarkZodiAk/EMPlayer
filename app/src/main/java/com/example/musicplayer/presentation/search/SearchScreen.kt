@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.musicplayer.data.local.entity.Audio
+import com.example.musicplayer.data.local.entity.Song
 import com.example.musicplayer.presentation.components.SongCard
 import com.example.musicplayer.presentation.search.components.SearchTextField
 
@@ -100,7 +100,7 @@ private fun SearchScreenPreview() {
     SearchScreen(
         state = SearchState(
             searchQuery = "hello",
-            songs = listOf(Audio(title = "Song1"), Audio(title = "Song2"))
+            songs = listOf(Song(title = "Song1"), Song(title = "Song2"))
         ),
         onAction = {}
     )

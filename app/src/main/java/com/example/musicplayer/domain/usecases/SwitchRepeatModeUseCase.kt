@@ -1,10 +1,10 @@
 package com.example.musicplayer.domain.usecases
 
-import com.example.musicplayer.data.AudioPlayer
+import com.example.musicplayer.data.SongPlayer
 import javax.inject.Inject
 
 class SwitchRepeatModeUseCase @Inject constructor(
-    private val player: AudioPlayer
+    private val player: SongPlayer
 ) {
     operator fun invoke(currentMode: RepeatMode) {
         player.setRepeatMode(currentMode.switch())
