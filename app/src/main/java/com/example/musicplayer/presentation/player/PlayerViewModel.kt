@@ -59,7 +59,7 @@ class PlayerViewModel @Inject constructor(
                 switchRepeatModeUseCase(state.repeatMode)
             }
             PlayerAction.SwitchShuffledMode -> {
-                audioPlayer.setPlaylistShuffle(!state.isShuffleEnabled)
+                audioPlayer.setShuffleMode(!state.isShuffleEnabled)
             }
             is PlayerAction.OnSongPositionSet -> {
                 audioPlayer.setPosition(action.position)

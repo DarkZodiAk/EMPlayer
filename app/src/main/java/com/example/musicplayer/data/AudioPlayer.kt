@@ -22,13 +22,17 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.random.Random
 
 @Singleton
 class AudioPlayer @Inject constructor(
     @ApplicationContext private val context: Context,
     private val player: ExoPlayer
 ) {
-    private var playlist = emptyList<Audio>()
+    private var initialPlaylist = emptyList<Audio>()
+    private var currentPlaylist = emptyList<Audio>()
+    private var index = 0
+
     private val scope = CoroutineScope(Dispatchers.Main)
     var playerState by mutableStateOf(AudioPlayerState())
         private set
@@ -37,12 +41,6 @@ class AudioPlayer @Inject constructor(
         override fun onTimelineChanged(timeline: Timeline, reason: Int) {
             scope.launch {
                 updateAudioPlayerState(currentTime = player.currentPosition)
-            }
-        }
-
-        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-            scope.launch {
-                updateAudioPlayerState(currentAudio = playlist[player.currentMediaItemIndex])
             }
         }
 
@@ -56,6 +54,12 @@ class AudioPlayer @Inject constructor(
                     updateAudioPlayerState(isError = false)
                 }
                 play()
+            }
+        }
+
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            if(playbackState == Player.STATE_ENDED) {
+                onSongEnded()
             }
         }
 
@@ -83,13 +87,12 @@ class AudioPlayer @Inject constructor(
         timeUpdater?.cancel()
     }
 
-    fun setPlaylist(audio: List<Audio>) {
-        playlist = audio
-        player.setMediaItems(getMediaItemsFromAudio(audio))
-    }
-
-    fun setAudioIndex(index: Int) {
-        player.seekTo(index, 0L)
+    fun setPlaylist(audio: List<Audio>, index: Int) {
+        this.index = index
+        initialPlaylist = audio
+        currentPlaylist = audio
+        setMediaItemFromAudio(audio[index])
+        updateAudioPlayerState(isShuffleEnabled = false)
     }
 
     fun play() {
@@ -105,16 +108,18 @@ class AudioPlayer @Inject constructor(
 
     fun pause() {
         player.pause()
-        stopTimeUpdater()
     }
 
     fun next() {
-        player.seekToNextMediaItem()
+        index = (index + 1) % currentPlaylist.size
+        setMediaItemFromAudio(currentPlaylist[index])
         play()
     }
 
     fun previous() {
-        player.seekToPreviousMediaItem()
+        index = (index - 1) % currentPlaylist.size
+        if(index < 0) index += currentPlaylist.size
+        setMediaItemFromAudio(currentPlaylist[index])
         play()
     }
 
@@ -128,23 +133,46 @@ class AudioPlayer @Inject constructor(
     }
 
     fun setRepeatMode(repeatMode: RepeatMode) {
-        when(repeatMode) {
-            RepeatMode.NO_REPEAT -> { player.repeatMode = Player.REPEAT_MODE_OFF }
-            RepeatMode.REPEAT_ONE -> { player.repeatMode = Player.REPEAT_MODE_ONE }
-            RepeatMode.REPEAT_ALL -> { player.repeatMode = Player.REPEAT_MODE_ALL }
-        }
         updateAudioPlayerState(repeatMode = repeatMode)
     }
 
-    fun setPlaylistShuffle(enabled: Boolean) {
-        player.shuffleModeEnabled = enabled
+    fun setShuffleMode(enabled: Boolean) {
+        if(enabled) {
+            val currentAudio = currentPlaylist[index]
+            currentPlaylist = initialPlaylist.toMutableList().apply {
+                removeAt(index)
+                shuffle(Random(System.currentTimeMillis()))
+                add(0, currentAudio)
+            }
+            index = 0
+        } else {
+            index = initialPlaylist.indexOf(currentPlaylist[index])
+            currentPlaylist = initialPlaylist
+        }
         updateAudioPlayerState(isShuffleEnabled = enabled)
     }
 
-    private fun getMediaItemsFromAudio(audio: List<Audio>): List<MediaItem> {
-        return audio.map {
-            MediaItem.fromUri(Uri.parse(it.uri))
+    private fun onSongEnded() {
+        when(playerState.repeatMode) {
+            RepeatMode.NO_REPEAT -> {
+                if(index == currentPlaylist.size - 1) {
+                    pause()
+                }
+            }
+            RepeatMode.REPEAT_ONE -> {
+                setPosition(0L)
+                play()
+            }
+            RepeatMode.REPEAT_ALL -> {
+                next()
+            }
         }
+    }
+
+    private fun setMediaItemFromAudio(audio: Audio) {
+        val mediaItem = MediaItem.fromUri(Uri.parse(audio.uri))
+        updateAudioPlayerState(currentAudio = audio)
+        player.setMediaItem(mediaItem)
     }
 
     private fun updateAudioPlayerState(
