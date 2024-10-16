@@ -1,6 +1,6 @@
 package com.example.musicplayer.domain.usecases
 
-import com.example.musicplayer.data.SongPlayer
+import com.example.musicplayer.domain.songPlayer.SongPlayer
 import javax.inject.Inject
 
 class SwitchRepeatModeUseCase @Inject constructor(

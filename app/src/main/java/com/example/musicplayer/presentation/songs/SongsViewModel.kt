@@ -3,14 +3,15 @@ package com.example.musicplayer.presentation.songs
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.musicplayer.data.SongPlayer
+import com.example.musicplayer.domain.songPlayer.SongPlayer
 import com.example.musicplayer.domain.usecases.GetSongsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
@@ -28,7 +29,8 @@ class SongsViewModel @Inject constructor(
     init {
         getAllSongs()
 
-        snapshotFlow { songPlayer.playerState.currentSong }
+        SongPlayer.state.map { it.currentSong }
+            .distinctUntilChanged()
             .onEach { state = state.copy(playingSong = it) }
             .launchIn(viewModelScope)
     }

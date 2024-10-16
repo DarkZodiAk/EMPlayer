@@ -11,14 +11,12 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import androidx.annotation.OptIn
-import androidx.compose.runtime.snapshotFlow
 import androidx.core.app.NotificationCompat
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaStyleNotificationHelper
-import com.example.musicplayer.data.SongPlayer
 import com.example.musicplayer.data.NextSongReceiver
 import com.example.musicplayer.data.PauseResumeReceiver
 import com.example.musicplayer.data.PrevSongReceiver
@@ -32,8 +30,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 import com.example.musicplayer.R
+import com.example.musicplayer.domain.songPlayer.SongPlayer
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 
 @AndroidEntryPoint
 class PlayerService: Service() {
@@ -156,12 +157,15 @@ class PlayerService: Service() {
     }
 
     private fun updateNotification() {
-        snapshotFlow { player.playerState.isPlaying }
+        SongPlayer.state.map { it.isPlaying }
+            .distinctUntilChanged()
             .onEach {
                 playerState = playerState.copy(isPlaying = it)
                 notificationManager.notify(1, buildNotification(playerState.isPlaying))
             }.launchIn(scope)
-        snapshotFlow { player.playerState.currentSong }
+
+        SongPlayer.state.map { it.currentSong }
+            .distinctUntilChanged()
             .filterNotNull()
             .onEach {
                 playerState = playerState.copy(currentSong = it)
@@ -171,7 +175,7 @@ class PlayerService: Service() {
 
     private fun stop() {
         stopSelf()
-        player.pause()
+        player.stop()
         _isServiceActive.value = false
         scope.cancel()
         scope = CoroutineScope(Dispatchers.Main)

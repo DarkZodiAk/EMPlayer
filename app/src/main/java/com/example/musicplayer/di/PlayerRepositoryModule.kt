@@ -10,7 +10,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class PlayerBinder {
+abstract class PlayerRepositoryModule {
     @Binds
     @Singleton
     abstract fun bindsPlayerRepository(

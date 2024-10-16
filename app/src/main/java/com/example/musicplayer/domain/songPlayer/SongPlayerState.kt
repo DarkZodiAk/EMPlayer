@@ -1,4 +1,4 @@
-package com.example.musicplayer.data
+package com.example.musicplayer.domain.songPlayer
 
 import com.example.musicplayer.data.local.entity.Song
 import com.example.musicplayer.domain.usecases.RepeatMode
