@@ -3,11 +3,10 @@ package com.example.musicplayer.presentation.player
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.musicplayer.data.SongPlayer
 import com.example.musicplayer.data.local.entity.Song
+import com.example.musicplayer.domain.songPlayer.SongPlayer
 import com.example.musicplayer.domain.usecases.SwitchRepeatModeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -29,7 +28,7 @@ class PlayerViewModel @Inject constructor(
     val uiEvent = channel.receiveAsFlow()
 
     init {
-        snapshotFlow { songPlayer.playerState }.onEach { playerState ->
+        SongPlayer.state.onEach { playerState ->
             state = state.copy(
                 playingSong = playerState.currentSong ?: Song(),
                 isPlaying = playerState.isPlaying,

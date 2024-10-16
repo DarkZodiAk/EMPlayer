@@ -2,9 +2,6 @@ package com.example.musicplayer.data
 
 import android.content.Context
 import android.net.Uri
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -12,6 +9,8 @@ import androidx.media3.common.Timeline
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.musicplayer.MainActivity
 import com.example.musicplayer.data.local.entity.Song
+import com.example.musicplayer.domain.songPlayer.SongPlayer
+import com.example.musicplayer.domain.songPlayer.SongPlayerState
 import com.example.musicplayer.domain.usecases.RepeatMode
 import com.example.musicplayer.notification.PlayerService
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -21,21 +20,18 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.random.Random
 
-@Singleton
-class SongPlayer @Inject constructor(
+class SongPlayerImpl @Inject constructor(
     @ApplicationContext private val context: Context,
     private val player: ExoPlayer
-) {
+): SongPlayer {
     private var initialPlaylist = emptyList<Song>()
     private var currentPlaylist = emptyList<Song>()
     private var index = 0
 
     private val scope = CoroutineScope(Dispatchers.Main)
-    var playerState by mutableStateOf(SongPlayerState())
-        private set
+    private var playerState = SongPlayerState()
 
     private val listener = object : Player.Listener {
         override fun onTimelineChanged(timeline: Timeline, reason: Int) {
@@ -87,7 +83,7 @@ class SongPlayer @Inject constructor(
         timeUpdater?.cancel()
     }
 
-    fun setPlaylist(songs: List<Song>, index: Int) {
+    override fun setPlaylist(songs: List<Song>, index: Int) {
         this.index = index
         initialPlaylist = songs
         currentPlaylist = songs
@@ -95,7 +91,7 @@ class SongPlayer @Inject constructor(
         updateSongPlayerState(isShuffleEnabled = false)
     }
 
-    fun play() {
+    override fun play() {
         if(player.availableCommands.contains(Player.COMMAND_PREPARE)) {
             player.prepare()
         }
@@ -106,37 +102,37 @@ class SongPlayer @Inject constructor(
         player.play()
     }
 
-    fun pause() {
+    override fun pause() {
         player.pause()
     }
 
-    fun next() {
+    override fun next() {
         index = (index + 1) % currentPlaylist.size
         setMediaItemFromSong(currentPlaylist[index])
         play()
     }
 
-    fun previous() {
+    override fun previous() {
         index = (index - 1) % currentPlaylist.size
         if(index < 0) index += currentPlaylist.size
         setMediaItemFromSong(currentPlaylist[index])
         play()
     }
 
-    fun setPosition(position: Long) {
+    override fun setPosition(position: Long) {
         player.seekTo(position)
     }
 
-    fun stop() {
+    override fun stop() {
         player.stop()
         stopTimeUpdater()
     }
 
-    fun setRepeatMode(repeatMode: RepeatMode) {
+    override fun setRepeatMode(repeatMode: RepeatMode) {
         updateSongPlayerState(repeatMode = repeatMode)
     }
 
-    fun setShuffleMode(enabled: Boolean) {
+    override fun setShuffleMode(enabled: Boolean) {
         if(enabled) {
             val currentSong = currentPlaylist[index]
             currentPlaylist = initialPlaylist.toMutableList().apply {
@@ -191,5 +187,7 @@ class SongPlayer @Inject constructor(
             repeatMode = repeatMode ?: playerState.repeatMode,
             isShuffleEnabled = isShuffleEnabled ?: playerState.isShuffleEnabled
         )
+
+        SongPlayer.updateState(playerState)
     }
 }
