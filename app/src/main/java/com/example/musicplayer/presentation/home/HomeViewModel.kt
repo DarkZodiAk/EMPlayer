@@ -24,7 +24,7 @@ class HomeViewModel @Inject constructor(
             state = state.copy(
                 playingSong = playerState.currentSong,
                 isPlaying = playerState.isPlaying,
-                currentProgress = playerState.currentTime
+                currentProgress = playerState.currentPosition
             )
         }.launchIn(viewModelScope)
     }

@@ -32,7 +32,7 @@ class PlayerViewModel @Inject constructor(
             state = state.copy(
                 playingSong = playerState.currentSong ?: Song(),
                 isPlaying = playerState.isPlaying,
-                currentProgress = playerState.currentTime,
+                currentProgress = playerState.currentPosition,
                 repeatMode = playerState.repeatMode,
                 isShuffleEnabled = playerState.isShuffleEnabled
             )
