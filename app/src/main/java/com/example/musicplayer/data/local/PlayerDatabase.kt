@@ -7,9 +7,11 @@ import com.example.musicplayer.data.local.dao.PlaylistDao
 import com.example.musicplayer.data.local.entity.Song
 import com.example.musicplayer.data.local.entity.SongPlaylistCross
 import com.example.musicplayer.data.local.entity.Playlist
+import com.example.musicplayer.data.local.entity.SongInCurrentPlaylist
+import com.example.musicplayer.data.local.entity.SongInInitialPlaylist
 
 @Database(
-    entities = [Playlist::class, Song::class, SongPlaylistCross::class],
+    entities = [Playlist::class, Song::class, SongPlaylistCross::class, SongInCurrentPlaylist::class, SongInInitialPlaylist::class],
     version = 5
 )
 abstract class PlayerDatabase: RoomDatabase() {
