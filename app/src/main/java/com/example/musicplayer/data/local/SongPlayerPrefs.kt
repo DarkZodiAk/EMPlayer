@@ -51,7 +51,9 @@ class SongPlayerPrefs @Inject constructor(
         }
     }
 
-    fun getPlaylistIndex(): Int = pref.getInt(PLAYLIST_INDEX, 0)
+    fun getPlaylistIndex(): Int {
+        return pref.getInt(PLAYLIST_INDEX, 0)
+    }
 
     companion object {
         private const val CURRENT_SONG_ID = "CURRENT_SONG_ID"

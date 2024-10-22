@@ -24,7 +24,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.random.Random
 
@@ -114,16 +113,16 @@ class SongPlayerImpl @Inject constructor(
 
     override fun next() {
         index = (index + 1) % currentPlaylist.size
-        setMediaItemFromSong(currentPlaylist[index])
         saveIndex()
+        setMediaItemFromSong(currentPlaylist[index])
         play()
     }
 
     override fun previous() {
         index = (index - 1) % currentPlaylist.size
         if(index < 0) index += currentPlaylist.size
-        setMediaItemFromSong(currentPlaylist[index])
         saveIndex()
+        setMediaItemFromSong(currentPlaylist[index])
         play()
     }
 
@@ -207,28 +206,31 @@ class SongPlayerImpl @Inject constructor(
         scopeIO.launch {
             prefs.getPlayerState()?.let { state ->
                 val job1 = launch {
-                    initialPlaylist = songDao.getSongsFromInitialPlaylist().mapNotNull {
-                        songDao.getSongById(it.id)
-                    }
+                    initialPlaylist = songDao.getSongsFromInitialPlaylist().sortedBy {
+                        it.index
+                    }.mapNotNull { songDao.getSongById(it.id) }
+
+
+                }
+                val job2 = launch {
+                    currentPlaylist = songDao.getSongsFromCurrentPlaylist().sortedBy {
+                        it.index
+                    }.mapNotNull { songDao.getSongById(it.id) }
                 }
 
-                val job2 = launch {
-                    currentPlaylist = songDao.getSongsFromCurrentPlaylist().mapNotNull {
-                        songDao.getSongById(it.id)
-                    }
-                }
+                listOf(job1, job2).joinAll()
+                scope.launch {
+                    index = prefs.getPlaylistIndex()
+                    setMediaItemFromSong(currentPlaylist[index])
+                    player.prepare()
+                    setPosition(state.currentPosition)
+                }.join()
+
                 updateSongPlayerState(
                     currentSong = state.currentSong,
-                    currentPosition = state.currentPosition,
                     repeatMode = state.repeatMode,
                     isShuffleEnabled = state.isShuffleEnabled
                 )
-                index = prefs.getPlaylistIndex()
-                listOf(job1, job2).joinAll()
-                withContext(Dispatchers.Main) {
-                    setMediaItemFromSong(currentPlaylist[index])
-                    setPosition(state.currentPosition)
-                }
             }
         }
     }
