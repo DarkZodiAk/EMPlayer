@@ -47,7 +47,7 @@ class SongObserver @Inject constructor(
         val selection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
 
         val currentSongs = playerRepository.getAllSongs().first()
-        val newSong = mutableListOf<Song>()
+        val newSongs = mutableListOf<Song>()
 
         contentResolver.query(
             collection,
@@ -105,7 +105,7 @@ class SongObserver @Inject constructor(
                     } catch (_: IllegalArgumentException) {
                     }
 
-                    newSong.add(
+                    newSongs.add(
                         Song(
                             id,
                             contentUri.toString(),
@@ -128,12 +128,12 @@ class SongObserver @Inject constructor(
         }
 
         val songRowsToDelete = currentSongs.filter { song ->
-            newSong.none { it.uri == song.uri }
+            newSongs.none { it.uri == song.uri }
         }
         songRowsToDelete.forEach { song ->
             playerRepository.deleteSong(song)
         }
-        newSong.forEach { song ->
+        newSongs.forEach { song ->
             playerRepository.upsertSong(song)
         }
     }

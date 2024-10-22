@@ -5,6 +5,8 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.room.Room
 import com.example.musicplayer.data.local.PlayerDatabase
+import com.example.musicplayer.data.local.dao.FolderDao
+import com.example.musicplayer.data.local.dao.PlayerStateDao
 import com.example.musicplayer.data.local.dao.SongDao
 import com.example.musicplayer.data.local.dao.PlaylistDao
 import com.example.musicplayer.domain.PlayerRepository
@@ -41,6 +43,18 @@ object PlayerModule {
     @Singleton
     fun providesSongDao(db: PlayerDatabase): SongDao {
         return db.songDao
+    }
+
+    @Provides
+    @Singleton
+    fun providesFolderDao(db: PlayerDatabase): FolderDao {
+        return db.folderDao
+    }
+
+    @Provides
+    @Singleton
+    fun providesPlayerStateDao(db: PlayerDatabase): PlayerStateDao {
+        return db.playerStateDao
     }
 
     @Provides

@@ -1,11 +1,14 @@
 package com.example.musicplayer.data
 
 import android.content.Context
+import com.example.musicplayer.data.local.dao.FolderDao
 import com.example.musicplayer.data.local.dao.SongDao
 import com.example.musicplayer.data.local.dao.PlaylistDao
+import com.example.musicplayer.data.local.entity.Folder
 import com.example.musicplayer.data.local.entity.Song
 import com.example.musicplayer.data.local.entity.SongPlaylistCross
 import com.example.musicplayer.data.local.entity.Playlist
+import com.example.musicplayer.data.local.entity.SongFolderCross
 import com.example.musicplayer.domain.PlayerRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -15,8 +18,10 @@ import javax.inject.Inject
 class PlayerRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
     private val playlistDao: PlaylistDao,
-    private val songDao: SongDao
+    private val songDao: SongDao,
+    private val folderDao: FolderDao
 ): PlayerRepository {
+    /* PLAYLISTS */
     override suspend fun createPlaylist(playlist: Playlist) {
         playlistDao.createPlaylist(
             playlist.copy(imageUri = emptyImageUri)
@@ -70,6 +75,7 @@ class PlayerRepositoryImpl @Inject constructor(
         updatePlaylist(playlist)
     }
 
+    /* SONGS */
     override suspend fun upsertSong(song: Song) {
         songDao.upsertSong(song)
     }
@@ -83,6 +89,35 @@ class PlayerRepositoryImpl @Inject constructor(
 
     override fun getAllSongs(): Flow<List<Song>> {
         return songDao.getAllSongs()
+    }
+
+    /* FOLDERS */
+    override suspend fun insertFolder(folder: Folder) {
+        folderDao.insertFolder(folder)
+    }
+
+    override suspend fun deleteFolder(folder: Folder) {
+        folderDao.deleteFolder(folder)
+    }
+
+    override fun getAllFolders(): Flow<List<Folder>> {
+        return folderDao.getAllFolders()
+    }
+
+    override fun getFolderById(id: Long): Flow<Folder?> {
+        return folderDao.getFolderById(id)
+    }
+
+    override fun getSongsFromFolder(folderId: Long): Flow<List<Song>> {
+        return folderDao.getSongsFromFolder(folderId)
+    }
+
+    override suspend fun addSongToFolder(songId: Long, folderId: Long) {
+        folderDao.addSongToFolder(SongFolderCross(songId, folderId))
+    }
+
+    override suspend fun deleteSongFromFolder(songId: Long, folderId: Long) {
+        folderDao.deleteSongFromFolder(SongFolderCross(songId, folderId))
     }
 
     companion object {

@@ -9,6 +9,7 @@ import androidx.media3.common.Timeline
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.musicplayer.MainActivity
 import com.example.musicplayer.data.local.SongPlayerPrefs
+import com.example.musicplayer.data.local.dao.PlayerStateDao
 import com.example.musicplayer.data.local.dao.SongDao
 import com.example.musicplayer.data.local.entity.Song
 import com.example.musicplayer.data.local.entity.SongInCurrentPlaylist
@@ -30,6 +31,7 @@ import kotlin.random.Random
 class SongPlayerImpl @Inject constructor(
     @ApplicationContext private val context: Context,
     private val prefs: SongPlayerPrefs,
+    private val playerStateDao: PlayerStateDao,
     private val songDao: SongDao,
     private val player: ExoPlayer
 ): SongPlayer {
@@ -206,14 +208,14 @@ class SongPlayerImpl @Inject constructor(
         scopeIO.launch {
             prefs.getPlayerState()?.let { state ->
                 val job1 = launch {
-                    initialPlaylist = songDao.getSongsFromInitialPlaylist().sortedBy {
+                    initialPlaylist = playerStateDao.getSongsFromInitialPlaylist().sortedBy {
                         it.index
                     }.mapNotNull { songDao.getSongById(it.id) }
 
 
                 }
                 val job2 = launch {
-                    currentPlaylist = songDao.getSongsFromCurrentPlaylist().sortedBy {
+                    currentPlaylist = playerStateDao.getSongsFromCurrentPlaylist().sortedBy {
                         it.index
                     }.mapNotNull { songDao.getSongById(it.id) }
                 }
@@ -246,17 +248,17 @@ class SongPlayerImpl @Inject constructor(
     private fun savePlaylists(saveInitial: Boolean = true) {
         if(saveInitial) {
             scopeIO.launch {
-                songDao.deleteSongsFromInitialPlaylist()
+                playerStateDao.deleteSongsFromInitialPlaylist()
                 initialPlaylist.forEachIndexed { index, song ->
-                    songDao.addSongToInitialPlaylist(SongInInitialPlaylist(song.id, index))
+                    playerStateDao.addSongToInitialPlaylist(SongInInitialPlaylist(song.id, index))
                 }
             }
         }
 
         scopeIO.launch {
-            songDao.deleteSongsFromCurrentPlaylist()
+            playerStateDao.deleteSongsFromCurrentPlaylist()
             currentPlaylist.forEachIndexed { index, song ->
-                songDao.addSongToCurrentPlaylist(SongInCurrentPlaylist(song.id, index))
+                playerStateDao.addSongToCurrentPlaylist(SongInCurrentPlaylist(song.id, index))
             }
         }
     }

@@ -33,9 +33,6 @@ interface PlaylistDao {
     @Query("SELECT * FROM song WHERE id IN (SELECT songId FROM songplaylistcross WHERE playlistId = :playlistId)")
     fun getSongsFromPlaylist(playlistId: Long): Flow<List<Song>>
 
-    @Query("SELECT albumArt FROM song WHERE id IN (SELECT songId FROM songplaylistcross WHERE playlistId = :playlistId)")
-    fun getSongAlbumArtsFromPlaylist(playlistId: Long): Flow<List<String>>
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addSongToPlaylist(ref: SongPlaylistCross)
 
