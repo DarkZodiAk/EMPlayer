@@ -7,9 +7,9 @@ Simple music player for Android written in Kotlin
 - Search songs by title and artist
 - Shuffle and playback modes
 - Playback notification
+- Restore player state when restarting the app
 
 ## What should be done
-- Save player state when restarting the app
 - Use string resources instead of placing plain text in screens
 - Folders & artists tabs
 - Sleep timer
