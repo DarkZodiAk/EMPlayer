@@ -23,6 +23,7 @@ interface PlayerRepository {
     suspend fun deleteFolder(folder: Folder)
     fun getAllFolders(): Flow<List<Folder>>
     fun getFolderById(id: Long): Flow<Folder?>
+    suspend fun getFolderIdByAbsoluteName(absoluteName: String): Long?
     fun getSongsFromFolder(folderId: Long): Flow<List<Song>>
     suspend fun addSongToFolder(songId: Long, folderId: Long)
     suspend fun deleteSongFromFolder(songId: Long, folderId: Long)

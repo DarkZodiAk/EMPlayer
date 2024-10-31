@@ -108,6 +108,10 @@ class PlayerRepositoryImpl @Inject constructor(
         return folderDao.getFolderById(id)
     }
 
+    override suspend fun getFolderIdByAbsoluteName(absoluteName: String): Long? {
+        return folderDao.getFolderIdByAbsoluteName(absoluteName)
+    }
+
     override fun getSongsFromFolder(folderId: Long): Flow<List<Song>> {
         return folderDao.getSongsFromFolder(folderId)
     }

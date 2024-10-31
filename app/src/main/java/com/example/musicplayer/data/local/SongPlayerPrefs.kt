@@ -17,6 +17,7 @@ class SongPlayerPrefs @Inject constructor(
     private val pref = context.getSharedPreferences("NAME", Context.MODE_PRIVATE)
 
     fun savePlayerState(state: SongPlayerState) {
+        if(state == SongPlayerState.empty) return
         pref.edit {
             state.currentSong?.let { song ->
                 putLong(CURRENT_SONG_ID, song.id)
@@ -28,7 +29,7 @@ class SongPlayerPrefs @Inject constructor(
     }
 
     suspend fun getPlayerState(): SongPlayerState? {
-        val currentSongId = pref.getLong(CURRENT_SONG_ID, -1)
+        val currentSongId = pref.getLong(CURRENT_SONG_ID, -1L)
         val currentPosition = pref.getLong(CURRENT_POSITION, 0)
         val repeatMode = pref.getString(REPEAT_MODE, RepeatMode.NO_REPEAT.toString())
         val shuffleEnabled = pref.getBoolean(SHUFFLE_ENABLED, false)

@@ -1,5 +1,6 @@
 package com.example.musicplayer.presentation.components
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,9 +21,11 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.musicplayer.R
 
 @Composable
 @Stable
@@ -116,6 +119,25 @@ fun PlaylistCard(
         title = name,
         subtitle = songsCount,
         imageUri = imageUri,
+        onClick = onClick,
+        action = action,
+        modifier = modifier
+    )
+}
+
+@SuppressLint("ResourceType")
+@Composable
+@Stable
+fun FolderCard(
+    name: String,
+    onClick: () -> Unit,
+    action: @Composable (BoxScope.() -> Unit)? = null,
+    modifier: Modifier
+) {
+    PlayerCard(
+        title = name,
+        subtitle = "",
+        imageUri = stringResource(id = R.drawable.folder_icon),
         onClick = onClick,
         action = action,
         modifier = modifier

@@ -3,6 +3,7 @@ package com.example.musicplayer.data.local.dao
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.musicplayer.data.local.entity.Folder
 import com.example.musicplayer.data.local.entity.Song
@@ -11,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FolderDao {
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertFolder(folder: Folder)
 
     @Delete
@@ -23,10 +24,13 @@ interface FolderDao {
     @Query("SELECT * FROM folder WHERE id = :id")
     fun getFolderById(id: Long): Flow<Folder?>
 
+    @Query("SELECT id FROM folder WHERE absoluteName = :absoluteName")
+    suspend fun getFolderIdByAbsoluteName(absoluteName: String): Long?
+
     @Query("SELECT * FROM song WHERE id IN (SELECT songId FROM songfoldercross WHERE folderId = :folderId)")
     fun getSongsFromFolder(folderId: Long): Flow<List<Song>>
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addSongToFolder(songFolderCross: SongFolderCross)
 
     @Delete

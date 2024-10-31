@@ -34,8 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.musicplayer.presentation.home.components.PlayerBar
-import com.example.musicplayer.presentation.playlists.PlaylistsScreenRoot
-import com.example.musicplayer.presentation.songs.SongsScreenRoot
 import kotlinx.coroutines.launch
 
 @Composable
@@ -43,13 +41,11 @@ fun HomeScreenRoot(
     viewModel: HomeViewModel = hiltViewModel(),
     onOpenPlayer: () -> Unit,
     onOpenSearch: () -> Unit,
-    songsOnOpenPlayer: () -> Unit,
-    playlistsOnPlaylistClick: (Long) -> Unit,
+    showScreenOnTab: @Composable ((TabItem) -> Unit)
 ) {
     HomeScreen(
         state = viewModel.state,
-        songsOnOpenPlayer = songsOnOpenPlayer,
-        playlistsOnPlaylistClick = playlistsOnPlaylistClick,
+        showScreenOnTab = showScreenOnTab,
         onAction = { action ->
             when(action) {
                 HomeAction.OnPlayerBarClick -> onOpenPlayer()
@@ -64,8 +60,7 @@ fun HomeScreenRoot(
 @Composable
 fun HomeScreen(
     state: HomeState,
-    songsOnOpenPlayer: () -> Unit,
-    playlistsOnPlaylistClick: (Long) -> Unit,
+    showScreenOnTab: @Composable ((TabItem) -> Unit),
     onAction: (HomeAction) -> Unit
 ) {
     var selectedTabIndex by rememberSaveable {
@@ -132,10 +127,7 @@ fun HomeScreen(
                     .fillMaxWidth()
                     .weight(1f)
             ) { index ->
-                when (index) {
-                    TabItem.SONGS.ordinal -> SongsScreenRoot(onOpenPlayer = songsOnOpenPlayer)
-                    TabItem.PLAYLISTS.ordinal -> PlaylistsScreenRoot(onPlaylistClick = playlistsOnPlaylistClick)
-                }
+                showScreenOnTab(TabItem.entries[index])
             }
 
             state.playingSong?.let {
@@ -153,5 +145,5 @@ fun HomeScreen(
 }
 
 enum class TabItem(val title: String) {
-    SONGS("Песни"), PLAYLISTS("Плейлисты")
+    SONGS("Песни"), PLAYLISTS("Плейлисты"), FOLDERS("Папки")
 }

@@ -76,6 +76,7 @@ class SongPlayerImpl @Inject constructor(
     }
 
     private fun launchTimeUpdater() {
+        timeUpdater?.cancel()
         timeUpdater = scope.launch {
             while(true) {
                 updateSongPlayerState(currentPosition = player.currentPosition)
@@ -111,6 +112,7 @@ class SongPlayerImpl @Inject constructor(
 
     override fun pause() {
         player.pause()
+        stopTimeUpdater()
     }
 
     override fun next() {
@@ -198,7 +200,6 @@ class SongPlayerImpl @Inject constructor(
             repeatMode = repeatMode ?: playerState.repeatMode,
             isShuffleEnabled = isShuffleEnabled ?: playerState.isShuffleEnabled
         )
-
         SongPlayer.updateState(playerState)
         saveState()
     }
@@ -211,8 +212,6 @@ class SongPlayerImpl @Inject constructor(
                     initialPlaylist = playerStateDao.getSongsFromInitialPlaylist().sortedBy {
                         it.index
                     }.mapNotNull { songDao.getSongById(it.id) }
-
-
                 }
                 val job2 = launch {
                     currentPlaylist = playerStateDao.getSongsFromCurrentPlaylist().sortedBy {
