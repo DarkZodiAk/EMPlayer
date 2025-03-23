@@ -10,4 +10,8 @@ data class SongPlayerState(
     val isError: Boolean = false,
     val repeatMode: RepeatMode = RepeatMode.NO_REPEAT,
     val isShuffleEnabled: Boolean = false
-)
+) {
+    companion object {
+        val empty = SongPlayerState()
+    }
+}

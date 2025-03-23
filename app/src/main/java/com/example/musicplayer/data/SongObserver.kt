@@ -9,6 +9,7 @@ import android.os.Build
 import android.provider.MediaStore
 import android.util.Size
 import androidx.core.net.toUri
+import com.example.musicplayer.data.local.entity.Folder
 import com.example.musicplayer.data.local.entity.Song
 import com.example.musicplayer.domain.PlayerRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -47,7 +48,9 @@ class SongObserver @Inject constructor(
         val selection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
 
         val currentSongs = playerRepository.getAllSongs().first()
-        val newSong = mutableListOf<Song>()
+        val newSongs = mutableListOf<Song>()
+        val currentFolders = playerRepository.getAllFolders().first()
+        var newFolders = mutableSetOf<Folder>()
 
         contentResolver.query(
             collection,
@@ -105,7 +108,7 @@ class SongObserver @Inject constructor(
                     } catch (_: IllegalArgumentException) {
                     }
 
-                    newSong.add(
+                    newSongs.add(
                         Song(
                             id,
                             contentUri.toString(),
@@ -123,18 +126,40 @@ class SongObserver @Inject constructor(
                             dateModified.toLong()
                         )
                     )
+                    newFolders.add(
+                        Folder(absoluteName = getFolderAbsoluteName(data), name = getFolderName(data))
+                    )
                 } while(cursor.moveToNext())
             }
         }
 
+        newFolders = newFolders.map { folder ->
+            folder.copy(id = playerRepository.getFolderIdByAbsoluteName(folder.absoluteName))
+        }.toMutableSet()
+
+        currentFolders.filter { folder ->
+            newFolders.none { it.absoluteName == folder.absoluteName }
+        }.forEach { folder ->
+            playerRepository.deleteFolder(folder)
+        }
+        newFolders.forEach { folder ->
+            playerRepository.insertFolder(folder)
+        }
+
+
+
         val songRowsToDelete = currentSongs.filter { song ->
-            newSong.none { it.uri == song.uri }
+            newSongs.none { it.uri == song.uri }
         }
         songRowsToDelete.forEach { song ->
             playerRepository.deleteSong(song)
         }
-        newSong.forEach { song ->
+        newSongs.forEach { song ->
             playerRepository.upsertSong(song)
+            playerRepository.addSongToFolder(
+                songId = song.id,
+                folderId = playerRepository.getFolderIdByAbsoluteName(getFolderAbsoluteName(song.data))!!
+            )
         }
     }
 
@@ -155,6 +180,14 @@ class SongObserver @Inject constructor(
             emptyAlbumArts.add(albumArt)
             "android.resource://$packageName/drawable/music_icon"
         }
+    }
+
+    private fun getFolderAbsoluteName(songPath: String): String {
+        return songPath.split('/').dropLast(1).joinToString("/")
+    }
+
+    private fun getFolderName(songPath: String): String {
+        return songPath.split('/').asReversed()[1]
     }
 
      fun startObservingSongs() {

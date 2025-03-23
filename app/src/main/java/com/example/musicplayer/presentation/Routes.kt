@@ -13,4 +13,6 @@ sealed interface Route {
     object PlayerScreen: Route
     @Serializable
     object SearchScreen: Route
+    @Serializable
+    data class FolderScreen(val folderId: Long): Route
 }

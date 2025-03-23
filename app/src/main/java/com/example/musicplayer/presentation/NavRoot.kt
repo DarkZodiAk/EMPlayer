@@ -10,11 +10,16 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
+import com.example.musicplayer.presentation.folder.FolderScreenRoot
+import com.example.musicplayer.presentation.folders.FoldersScreenRoot
 import com.example.musicplayer.presentation.home.HomeScreenRoot
+import com.example.musicplayer.presentation.home.TabItem
 import com.example.musicplayer.presentation.player.PlayerScreenRoot
 import com.example.musicplayer.presentation.playlist.PlaylistScreenRoot
+import com.example.musicplayer.presentation.playlists.PlaylistsScreenRoot
 import com.example.musicplayer.presentation.search.SearchScreenRoot
 import com.example.musicplayer.presentation.selectSongs.SelectSongsScreenRoot
+import com.example.musicplayer.presentation.songs.SongsScreenRoot
 
 
 @Composable
@@ -35,8 +40,19 @@ fun NavRoot(
                 HomeScreenRoot(
                     onOpenPlayer = { navController.navigate(Route.PlayerScreen) },
                     onOpenSearch = { navController.navigate(Route.SearchScreen) },
-                    songsOnOpenPlayer = { navController.navigate(Route.PlayerScreen) },
-                    playlistsOnPlaylistClick = { navController.navigate(Route.PlaylistScreen(playlistId = it)) }
+                    showScreenOnTab = { tab ->
+                        when(tab) {
+                            TabItem.SONGS -> {
+                                SongsScreenRoot(onOpenPlayer = { navController.navigate(Route.PlayerScreen) })
+                            }
+                            TabItem.PLAYLISTS -> {
+                                PlaylistsScreenRoot(onPlaylistClick = { navController.navigate(Route.PlaylistScreen(playlistId = it)) })
+                            }
+                            TabItem.FOLDERS -> {
+                                FoldersScreenRoot(onFolderClick = { navController.navigate(Route.FolderScreen(folderId = it)) })
+                            }
+                        }
+                    }
                 )
             }
             composable<Route.PlaylistScreen> {
@@ -51,6 +67,7 @@ fun NavRoot(
             composable<Route.SelectSongsScreen> {
                 SelectSongsScreenRoot(onBack = { navController.navigateUp() })
             }
+
             composable<Route.PlayerScreen>(
                 deepLinks = listOf(navDeepLink { uriPattern = "mplayer://player" }),
                 enterTransition = {
@@ -68,8 +85,15 @@ fun NavRoot(
             ) {
                 PlayerScreenRoot(onBack = { navController.navigateUp() })
             }
+
             composable<Route.SearchScreen> {
                 SearchScreenRoot(
+                    onOpenPlayer = { navController.navigate(Route.PlayerScreen) },
+                    onBack = { navController.navigateUp() }
+                )
+            }
+            composable<Route.FolderScreen> {
+                FolderScreenRoot(
                     onOpenPlayer = { navController.navigate(Route.PlayerScreen) },
                     onBack = { navController.navigateUp() }
                 )
