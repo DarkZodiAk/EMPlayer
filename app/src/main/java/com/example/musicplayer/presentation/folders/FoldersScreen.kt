@@ -8,6 +8,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -34,6 +35,8 @@ fun FoldersScreen(
     folders: List<Folder>,
     onAction: (FoldersAction) -> Unit
 ) {
+    val packageName = LocalContext.current.packageName
+
     Scaffold { padding ->
         LazyColumn(
             modifier = Modifier
@@ -48,6 +51,7 @@ fun FoldersScreen(
             ) { folder ->
                 FolderCard(
                     name = folder.name,
+                    imageUri = "android.resource://$packageName/drawable/folder_icon",
                     onClick = { onAction(FoldersAction.OnFolderClick(folder.id!!)) },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -60,7 +64,7 @@ fun FoldersScreen(
 @Composable
 private fun FoldersScreenPreview() {
     FoldersScreen(
-        folders = listOf(Folder()),
+        folders = listOf(Folder(name = "Hello")),
         onAction = {}
     )
 }
