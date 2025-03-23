@@ -1,6 +1,5 @@
 package com.example.musicplayer.presentation.components
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,11 +20,9 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.musicplayer.R
 
 @Composable
 @Stable
@@ -41,10 +38,12 @@ fun PlayerCard(
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = modifier
+            .height(60.dp)
             .clickable(onClick = onClick)
             .padding(vertical = 8.dp, horizontal = 8.dp)
+
     ) {
-        Row(modifier = Modifier.weight(8f)) {
+        Row(modifier = Modifier.weight(8f).fillMaxHeight()) {
             AsyncImage(
                 model = imageUri,
                 contentDescription = null,
@@ -64,14 +63,16 @@ fun PlayerCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = titleColor
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = subtitle,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
+                if(subtitle.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = subtitle,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                }
             }
         }
 
@@ -125,19 +126,20 @@ fun PlaylistCard(
     )
 }
 
-@SuppressLint("ResourceType")
 @Composable
 @Stable
 fun FolderCard(
     name: String,
+    imageUri: String,
     onClick: () -> Unit,
     action: @Composable (BoxScope.() -> Unit)? = null,
     modifier: Modifier
 ) {
+
     PlayerCard(
         title = name,
         subtitle = "",
-        imageUri = stringResource(id = R.drawable.folder_icon),
+        imageUri = imageUri,
         onClick = onClick,
         action = action,
         modifier = modifier

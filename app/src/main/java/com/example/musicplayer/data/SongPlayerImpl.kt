@@ -112,7 +112,6 @@ class SongPlayerImpl @Inject constructor(
 
     override fun pause() {
         player.pause()
-        stopTimeUpdater()
     }
 
     override fun next() {

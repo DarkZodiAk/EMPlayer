@@ -3,6 +3,7 @@
 package com.example.musicplayer.presentation.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,11 +26,13 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -57,6 +60,7 @@ fun HomeScreenRoot(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     state: HomeState,
@@ -72,6 +76,8 @@ fun HomeScreen(
     LaunchedEffect(pagerState.currentPage) {
         selectedTabIndex = pagerState.currentPage
     }
+
+    var verticalDragCount by rememberSaveable { mutableFloatStateOf(0f) }
 
     Scaffold(
         topBar = {
@@ -137,7 +143,21 @@ fun HomeScreen(
                     currentProgress = state.currentProgress.toFloat(),
                     songDuration = state.playingSong.duration.toFloat(),
                     onClick = { onAction(HomeAction.OnPlayerBarClick) },
-                    onPlayPauseClick = { onAction(HomeAction.OnPlayPauseClick) }
+                    onPlayPauseClick = { onAction(HomeAction.OnPlayPauseClick) },
+                    modifier = Modifier.pointerInput(Unit) {
+                        detectVerticalDragGestures(
+                            onDragStart = { verticalDragCount = 0f },
+                            onDragEnd = {
+                                if(verticalDragCount < -96f) {
+                                    verticalDragCount = 0f
+                                    onAction(HomeAction.OnPlayerBarClick)
+                                }
+                            }
+                        ) { change, dragAmount ->
+                            change.consume()
+                            verticalDragCount += dragAmount
+                        }
+                    }
                 )
             }
         }

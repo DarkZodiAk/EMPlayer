@@ -2,6 +2,7 @@ package com.example.musicplayer.presentation.player
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,10 +33,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -87,6 +93,9 @@ fun PlayerScreen(
     state: PlayerState,
     onAction: (PlayerAction) -> Unit
 ) {
+    var horizontalSwipeCount by rememberSaveable { mutableFloatStateOf(0f) }
+    var verticalSwipeCount by rememberSaveable { mutableFloatStateOf(0f) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -114,6 +123,31 @@ fun PlayerScreen(
                     .aspectRatio(1f)
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(8.dp))
+                    .pointerInput(Unit) {
+                        detectDragGestures(
+                            onDragStart = {
+                                horizontalSwipeCount = 0f
+                                verticalSwipeCount = 0f
+                            },
+                            onDragEnd = {
+                                if(verticalSwipeCount > 128f) {
+                                    verticalSwipeCount = 0f
+                                    onAction(PlayerAction.OnBackClick)
+                                } else if(horizontalSwipeCount < -96f) {
+                                    horizontalSwipeCount = 0f
+                                    onAction(PlayerAction.OnNextSongClick)
+                                } else if(horizontalSwipeCount > 96f) {
+                                    horizontalSwipeCount = 0f
+                                    onAction(PlayerAction.OnPrevSongClick)
+                                }
+                            }
+                        ) { change, dragAmount ->
+                            change.consume()
+                            val (x,y) = dragAmount
+                            horizontalSwipeCount += x
+                            verticalSwipeCount += y
+                        }
+                    }
             )
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
