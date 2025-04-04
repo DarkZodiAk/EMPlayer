@@ -5,7 +5,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -13,7 +12,6 @@ import android.os.IBinder
 import androidx.annotation.OptIn
 import androidx.core.app.NotificationCompat
 import androidx.core.content.getSystemService
-import androidx.core.net.toUri
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaStyleNotificationHelper
@@ -95,19 +93,21 @@ class PlayerService: Service() {
         return START_STICKY
     }
 
+    @OptIn(UnstableApi::class)
     private fun start(activityClass: Class<*>) {
         if(!_isServiceActive.value){
             _isServiceActive.value = true
             createNotificationChannel()
 
             activityIntent = Intent(this, activityClass).apply {
-                data = "mplayer://player".toUri()
-                addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+                action = ACTION_OPEN_PLAYER
             }
-            pendingActivityIntent = TaskStackBuilder.create(this).run {
-                addNextIntentWithParentStack(activityIntent!!)
-                getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
-            }
+
+            pendingActivityIntent = PendingIntent.getActivity(
+                this, 0, activityIntent,
+                PendingIntent.FLAG_IMMUTABLE
+            )
 
             pauseResumeIntent = Intent(this, PauseResumeReceiver::class.java).apply { action = ACTION_PAUSE_RESUME }
             pauseResumePendingIntent = PendingIntent.getBroadcast(
@@ -203,6 +203,7 @@ class PlayerService: Service() {
         const val ACTION_NEXT_SONG = "ACTION_NEXT_SONG"
         const val ACTION_PREV_SONG = "ACTION_PREV_SONG"
         const val ACTION_STOP = "ACTION_STOP"
+        const val ACTION_OPEN_PLAYER = "ACTION_OPEN_PLAYER"
 
         private const val EXTRA_ACTIVITY_CLASS = "EXTRA_ACTIVITY_CLASS"
 

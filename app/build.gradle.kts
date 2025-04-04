@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.example.musicplayer"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.musicplayer"
@@ -43,7 +43,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.7"
     }
     packaging {
         resources {
@@ -81,11 +81,11 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
 
     //MediaPlayer
-    implementation("androidx.media3:media3-exoplayer:1.3.1")
-    implementation("androidx.media3:media3-exoplayer-dash:1.3.1")
+    implementation("androidx.media3:media3-exoplayer:1.6.0")
+    implementation("androidx.media3:media3-exoplayer-dash:1.6.0")
     
-    implementation("androidx.media3:media3-ui:1.3.1")
-    implementation("androidx.media3:media3-session:1.3.1")
+    implementation("androidx.media3:media3-ui:1.6.0")
+    implementation("androidx.media3:media3-session:1.6.0")
 
     //Coil
     implementation("io.coil-kt:coil-compose:2.6.0")

@@ -9,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navDeepLink
 import com.example.musicplayer.presentation.folder.FolderScreenRoot
 import com.example.musicplayer.presentation.folders.FoldersScreenRoot
 import com.example.musicplayer.presentation.home.HomeScreenRoot
@@ -69,7 +68,6 @@ fun NavRoot(
             }
 
             composable<Route.PlayerScreen>(
-                deepLinks = listOf(navDeepLink { uriPattern = "mplayer://player" }),
                 enterTransition = {
                     slideIntoContainer(
                         towards = AnimatedContentTransitionScope.SlideDirection.Up,

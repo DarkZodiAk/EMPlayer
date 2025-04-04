@@ -1,6 +1,7 @@
 package com.example.musicplayer
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
@@ -16,23 +17,48 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.example.musicplayer.notification.PlayerService
 import com.example.musicplayer.presentation.NavRoot
+import com.example.musicplayer.presentation.Route
 import com.example.musicplayer.presentation.components.PermissionDialog
 import com.example.musicplayer.ui.theme.MusicPlayerTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.dropWhile
+import kotlinx.coroutines.flow.take
 
 @AndroidEntryPoint
 class MainActivity : FragmentActivity() {
 
     private var originRequestOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 
+    private var navController: NavHostController? = null
+
+    @SuppressLint("RestrictedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MusicPlayerTheme {
                 val viewModel: MainViewModel = hiltViewModel()
-                val navController = rememberNavController()
+                navController = rememberNavController()
+
+                LaunchedEffect(Unit) {
+                    if(intent.action == PlayerService.ACTION_OPEN_PLAYER)
+                    navController!!.run {
+                        //Fire only when graph was established
+                        currentBackStack
+                            .dropWhile { it.isEmpty() }
+                            .take(1)
+                            .collect {
+                                navigate(Route.PlayerScreen)
+                                //Don't forget to reset Activity's intent action, cuz on every
+                                //configuration change everything launches again, including all side-effects.
+                                //That's why it's recommended to keep compose side-effects as low as possible
+                                intent.action = null
+                            }
+                    }
+                }
 
                 val permissionLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestPermission()
@@ -53,7 +79,7 @@ class MainActivity : FragmentActivity() {
                     ))
                 }
 
-                LaunchedEffect(key1 = true) {
+                LaunchedEffect(Unit) {
                     lockOrientation()
                     permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     viewModel.event.collect { event ->
@@ -85,8 +111,18 @@ class MainActivity : FragmentActivity() {
 
                 NavRoot(
                     isLoaded = viewModel.state.isLoaded,
-                    navController = navController
+                    navController = navController!!
                 )
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if(intent.action == PlayerService.ACTION_OPEN_PLAYER) {
+            //Navigate to PlayerScreen
+            navController?.navigate(Route.PlayerScreen) {
+                launchSingleTop = true
             }
         }
     }
@@ -102,12 +138,12 @@ class MainActivity : FragmentActivity() {
 }
 
 fun ComponentActivity.shouldShowReadPermissionRationale(): Boolean {
-    return shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    return shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)
 }
 
 fun Context.hasReadPermission(): Boolean {
     return ContextCompat.checkSelfPermission(
         this,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE
+        Manifest.permission.READ_EXTERNAL_STORAGE
     ) == PackageManager.PERMISSION_GRANTED
 }
