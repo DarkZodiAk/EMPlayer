@@ -81,15 +81,17 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
 
     //MediaPlayer
-    implementation("androidx.media3:media3-exoplayer:1.6.0")
-    implementation("androidx.media3:media3-exoplayer-dash:1.6.0")
-    
-    implementation("androidx.media3:media3-ui:1.6.0")
-    implementation("androidx.media3:media3-session:1.6.0")
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.exoplayer.dash)
+    implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.media3.session)
 
     //Coil
-    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation(libs.coil.compose)
+
+    //Splash Screen
+    implementation(libs.androidx.core.splashscreen)
 
     //Slider
-    implementation("io.github.2307vivek:seeker:1.2.2")
+    implementation(libs.seeker)
 }

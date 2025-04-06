@@ -83,7 +83,7 @@ fun HomeScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = "Compose Player", fontSize = 20.sp)
+                    Text(text = "EMPlayer", fontSize = 20.sp)
                 },
                 actions = {
                     IconButton(

@@ -70,7 +70,7 @@ class PlayerService: Service() {
     private var stopPendingIntent: PendingIntent? = null
 
     private val baseNotification = NotificationCompat.Builder(this, CHANNEL_ID)
-        .setSmallIcon(R.drawable.ic_launcher_background)
+        .setSmallIcon(R.drawable.emplayer_launcher_background)
         .setOngoing(true)
         .setOnlyAlertOnce(true)
     

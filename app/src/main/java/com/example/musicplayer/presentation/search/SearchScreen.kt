@@ -16,6 +16,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -47,6 +49,9 @@ fun SearchScreen(
     state: SearchState,
     onAction: (SearchAction) -> Unit
 ) {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Scaffold(
         topBar = {
             Row(
@@ -56,7 +61,11 @@ fun SearchScreen(
                     .padding(top = 8.dp, bottom = 8.dp, start = 12.dp, end = 8.dp)
             ) {
                 IconButton(
-                    onClick = { onAction(SearchAction.OnBackClick) },
+                    onClick = {
+                        keyboardController?.hide()
+                        focusManager.clearFocus()
+                        onAction(SearchAction.OnBackClick)
+                    },
                     modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
@@ -73,7 +82,8 @@ fun SearchScreen(
                     modifier = Modifier.weight(1f)
                 )
             }
-        }
+        },
+
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -86,7 +96,11 @@ fun SearchScreen(
                     artistName = song.artistName,
                     albumArtUri = song.albumArt,
                     isPlaying = song == state.playingSong,
-                    onClick = { onAction(SearchAction.PlaySong(index)) },
+                    onClick = {
+                        keyboardController?.hide()
+                        focusManager.clearFocus()
+                        onAction(SearchAction.PlaySong(index))
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
             }

@@ -31,13 +31,14 @@ import kotlinx.coroutines.flow.take
 @AndroidEntryPoint
 class MainActivity : FragmentActivity() {
 
-    private var originRequestOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+    private var orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
     private var navController: NavHostController? = null
 
     @SuppressLint("RestrictedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        restoreOrientation()
         setContent {
             MusicPlayerTheme {
                 val viewModel: MainViewModel = hiltViewModel()
@@ -132,12 +133,12 @@ class MainActivity : FragmentActivity() {
     }
 
     private fun lockOrientation() {
-        originRequestOrientation = requestedOrientation
+        orientation = requestedOrientation
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
     }
 
     private fun restoreOrientation() {
-        requestedOrientation = originRequestOrientation
+        requestedOrientation = orientation
     }
 }
 
