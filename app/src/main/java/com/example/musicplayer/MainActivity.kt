@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
@@ -14,7 +15,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -61,41 +61,45 @@ class MainActivity : FragmentActivity() {
                 }
 
                 val permissionLauncher = rememberLauncherForActivityResult(
-                    contract = ActivityResultContracts.RequestPermission()
-                ) { isGranted ->
+                    contract = ActivityResultContracts.RequestMultiplePermissions()
+                ) { _ ->
                     restoreOrientation()
-                    viewModel.onAction(MainAction.SubmitReadPermissionInfo(
-                        isGranted = isGranted,
-                        shouldShowRationale = shouldShowReadPermissionRationale()
+                    viewModel.onAction(MainAction.SubmitPermissionsInfo(
+                        hasRead = hasReadPermission(),
+                        hasPost = hasPostPermission(),
+                        shouldShowReadRationale = shouldShowReadPermissionRationale(),
+                        shouldShowPostRationale = shouldShowPostPermissionRationale()
                     ))
                 }
 
                 val settingsLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.StartActivityForResult()
                 ) {
-                    viewModel.onAction(MainAction.SubmitReadPermissionInfo(
-                        isGranted = hasReadPermission(),
-                        shouldShowRationale = shouldShowReadPermissionRationale()
+                    viewModel.onAction(MainAction.SubmitPermissionsInfo(
+                        hasRead = hasReadPermission(),
+                        hasPost = hasPostPermission(),
+                        shouldShowReadRationale = shouldShowReadPermissionRationale(),
+                        shouldShowPostRationale = shouldShowPostPermissionRationale()
                     ))
                 }
 
                 LaunchedEffect(Unit) {
                     lockOrientation()
-                    permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    permissionLauncher.launch(getPermissionsToAsk())
                     viewModel.event.collect { event ->
                         when(event) {
-                            MainEvent.RequestReadPermission -> {
+                            MainEvent.RequestPermissions -> {
                                 lockOrientation()
-                                permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                permissionLauncher.launch(getPermissionsToAsk())
                             }
                         }
                     }
                 }
 
-                if(viewModel.state.showReadSettingsDialog) {
+                if(viewModel.state.showSettingsDialog) {
                     PermissionDialog(
                         title = "Permission permanently declined",
-                        text = "You need to grant read permission in Settings to make player work",
+                        text = "You need to grant read and post permission in Settings to make player work",
                         buttonText = "OK",
                         onClick = {
                             settingsLauncher.launch(
@@ -137,13 +141,42 @@ class MainActivity : FragmentActivity() {
     }
 }
 
+
+fun getPermissionsToAsk(): Array<String> {
+    return if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        arrayOf(
+            Manifest.permission.READ_MEDIA_AUDIO,
+            Manifest.permission.POST_NOTIFICATIONS
+        )
+    } else {
+        arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+    }
+}
+
+fun ComponentActivity.shouldShowPostPermissionRationale(): Boolean {
+    return if(sdkTiramisu) {
+        shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)
+    } else false
+}
+
 fun ComponentActivity.shouldShowReadPermissionRationale(): Boolean {
-    return shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)
+    return shouldShowRequestPermissionRationale(getReadPermission())
 }
 
 fun Context.hasReadPermission(): Boolean {
-    return ContextCompat.checkSelfPermission(
-        this,
-        Manifest.permission.READ_EXTERNAL_STORAGE
-    ) == PackageManager.PERMISSION_GRANTED
+    return checkSelfPermission(getReadPermission()) == PackageManager.PERMISSION_GRANTED
 }
+
+fun Context.hasPostPermission(): Boolean {
+    return if(sdkTiramisu) {
+        checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+    } else true
+}
+
+fun getReadPermission(): String {
+    return if(sdkTiramisu) Manifest.permission.READ_MEDIA_AUDIO
+    else Manifest.permission.READ_EXTERNAL_STORAGE
+}
+
+val sdkTiramisu: Boolean
+    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU

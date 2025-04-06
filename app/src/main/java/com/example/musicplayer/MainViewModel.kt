@@ -25,17 +25,32 @@ class MainViewModel @Inject constructor(
 
     fun onAction(action: MainAction) {
         when(action) {
-            is MainAction.SubmitReadPermissionInfo -> {
-                if(!action.isGranted && action.shouldShowRationale) {
-                    viewModelScope.launch {
-                        channel.send(MainEvent.RequestReadPermission)
-                    }
-                } else if(!action.isGranted) {
-                    state = state.copy(showReadSettingsDialog = true)
-                } else {
-                    state = state.copy(isLoaded = true, showReadSettingsDialog = false)
-                    songObserver.startObservingSongs()
+            is MainAction.SubmitPermissionsInfo -> {
+                var requestRead = false
+                var requestPost = false
+
+                if(!action.hasRead && action.shouldShowReadRationale) {
+                    requestRead = true
                 }
+
+                if(!action.hasPost && action.shouldShowPostRationale) {
+                    requestPost = true
+                }
+
+                if(requestPost || requestRead) {
+                    viewModelScope.launch {
+                        channel.send(MainEvent.RequestPermissions)
+                    }
+                    return
+                }
+
+                if(!action.hasRead || !action.hasPost) {
+                    state = state.copy(showSettingsDialog = true)
+                    return
+                }
+
+                state = state.copy(isLoaded = true, showSettingsDialog = false)
+                songObserver.startObservingSongs()
             }
         }
     }

@@ -1,5 +1,10 @@
 package com.example.musicplayer
 
 sealed interface MainAction {
-    data class SubmitReadPermissionInfo(val isGranted: Boolean, val shouldShowRationale: Boolean): MainAction
+    data class SubmitPermissionsInfo(
+        val hasRead: Boolean,
+        val hasPost: Boolean,
+        val shouldShowReadRationale: Boolean,
+        val shouldShowPostRationale: Boolean
+    ): MainAction
 }
