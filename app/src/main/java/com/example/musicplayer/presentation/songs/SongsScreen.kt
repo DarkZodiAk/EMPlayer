@@ -126,7 +126,7 @@ fun SortByText(
         )
         Icon(
             imageVector = if(sortDirection == SortDirection.ASC) Icons.Default.ArrowDownward
-            else Icons.Default.ArrowUpward,
+                        else Icons.Default.ArrowUpward,
             contentDescription = null,
             tint = Color.Gray,
             modifier = Modifier.size(16.dp)

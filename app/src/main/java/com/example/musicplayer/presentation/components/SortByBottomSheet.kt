@@ -5,9 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
@@ -37,12 +35,13 @@ fun SortByBottomSheet(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+
     val modalSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
         sheetState = modalSheetState,
         onDismissRequest = onDismiss,
-        modifier = modifier.height(440.dp),
+        modifier = modifier,
         dragHandle = {
             Column {
                 Text(
@@ -53,7 +52,7 @@ fun SortByBottomSheet(
             }
         }
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column {
             SortType.entries.forEach { type ->
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
