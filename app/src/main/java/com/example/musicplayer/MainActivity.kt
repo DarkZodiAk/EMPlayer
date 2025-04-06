@@ -99,8 +99,9 @@ class MainActivity : FragmentActivity() {
 
                 if(viewModel.state.showSettingsDialog) {
                     PermissionDialog(
-                        title = "Permission permanently declined",
-                        text = "You need to grant read and post permission in Settings to make player work",
+                        title = "Разрешения не предоставлены",
+                        text = "Для работы плеера требуется предоставить разрешения на чтение и " +
+                                "отправку уведомлений (с Android 13)",
                         buttonText = "OK",
                         onClick = {
                             settingsLauncher.launch(
@@ -111,7 +112,6 @@ class MainActivity : FragmentActivity() {
                             )
                         }
                     )
-
                 }
 
                 NavRoot(

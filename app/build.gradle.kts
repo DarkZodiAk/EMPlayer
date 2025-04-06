@@ -89,9 +89,6 @@ dependencies {
     //Coil
     implementation(libs.coil.compose)
 
-    //Splash Screen
-    implementation(libs.androidx.core.splashscreen)
-
     //Slider
     implementation(libs.seeker)
 }

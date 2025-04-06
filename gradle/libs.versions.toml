@@ -1,7 +1,6 @@
 [versions]
 agp = "8.3.0"
 coilCompose = "2.6.0"
-coreSplashscreen = "1.0.1"
 hiltAndroid = "2.50"
 hiltCompiler = "1.2.0"
 kotlin = "1.9.21"
@@ -44,7 +43,6 @@ androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 
 androidx-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
-androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 seeker = { module = "io.github.2307vivek:seeker", version.ref = "seeker" }
 
