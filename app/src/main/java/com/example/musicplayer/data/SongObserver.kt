@@ -15,6 +15,7 @@ import com.example.musicplayer.domain.PlayerRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.FileNotFoundException
@@ -28,22 +29,22 @@ class SongObserver @Inject constructor(
 ) {
     private val contentResolver = context.contentResolver
     private val packageName = context.packageName
-    private val scope = CoroutineScope(Dispatchers.IO)
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val contentObserver = object : ContentObserver(null) {
-        override fun onChange(selfChange: Boolean) { scope.launch { loadAllSongs() } }
-        override fun onChange(selfChange: Boolean, uri: Uri?) { scope.launch { loadAllSongs() } }
-        override fun onChange(selfChange: Boolean, uri: Uri?, flags: Int) { scope.launch { loadAllSongs() } }
+        override fun onChange(selfChange: Boolean) { scope.launch { loadAll() } }
+        override fun onChange(selfChange: Boolean, uri: Uri?) { scope.launch { loadAll() } }
+        override fun onChange(selfChange: Boolean, uri: Uri?, flags: Int) { scope.launch { loadAll() } }
         override fun onChange(
             selfChange: Boolean,
             uris: MutableCollection<Uri>,
             flags: Int
-        ) { scope.launch { loadAllSongs() } }
+        ) { scope.launch { loadAll() } }
     }
     private var isObserving = false
 
     private val emptyAlbumArts = mutableSetOf<String>()
 
-    private suspend fun loadAllSongs() {
+    private suspend fun loadAll() {
         val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         val selection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
 
@@ -133,37 +134,42 @@ class SongObserver @Inject constructor(
             }
         }
 
+        //Remove deleted songs from DB
+        currentSongs.filter { song ->
+            newSongs.none { it.uri == song.uri }
+        }.forEach { song ->
+            scope.launch { playerRepository.deleteSong(song) }
+        }
+
         newFolders = newFolders.map { folder ->
             folder.copy(id = playerRepository.getFolderIdByAbsoluteName(folder.absoluteName))
         }.toMutableSet()
 
+        //Remove from DB folders that don't contain any songs, or they were deleted
         currentFolders.filter { folder ->
             newFolders.none { it.absoluteName == folder.absoluteName }
         }.forEach { folder ->
-            playerRepository.deleteFolder(folder)
+            scope.launch { playerRepository.deleteFolder(folder) }
         }
+
+        //Add new folders
         newFolders.forEach { folder ->
-            playerRepository.insertFolder(folder)
+            scope.launch { playerRepository.insertFolder(folder) }
         }
 
-
-
-        val songRowsToDelete = currentSongs.filter { song ->
-            newSongs.none { it.uri == song.uri }
-        }
-        songRowsToDelete.forEach { song ->
-            playerRepository.deleteSong(song)
-        }
+        //Add new songs
         newSongs.forEach { song ->
-            playerRepository.upsertSong(song)
-            playerRepository.addSongToFolder(
-                songId = song.id,
-                folderId = playerRepository.getFolderIdByAbsoluteName(getFolderAbsoluteName(song.data))!!
-            )
+            scope.launch {
+                playerRepository.upsertSong(song)
+                playerRepository.addSongToFolder(
+                    songId = song.id,
+                    folderId = playerRepository.getFolderIdByAbsoluteName(getFolderAbsoluteName(song.data))!!
+                )
+            }
         }
     }
 
-
+    //Get Uri for AlbumArt of song. If it's not found, return default image Uri
     private fun getAlbumArtForId(albumId: Long): String {
         val albumArt = ContentUris.withAppendedId(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI, albumId).toString()
         if(albumArt in emptyAlbumArts)
@@ -194,7 +200,7 @@ class SongObserver @Inject constructor(
         if(isObserving) return
         isObserving = true
         scope.launch {
-            loadAllSongs()
+            loadAll()
         }
         contentResolver.registerContentObserver(
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
