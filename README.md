@@ -1,17 +1,23 @@
-# Music player - WIP
-Simple music player for Android written in Kotlin
+# Evgeny's Music Player
+Music player for Android written in Kotlin
 
 ## Features
 - Sort songs by title, artist, album, duration, add & modify time
 - Create and edit playlists
+- Access music folders
 - Search songs by title and artist
 - Shuffle and playback modes
 - Playback notification
 - Restore player state when restarting the app
 
-## What should be done
+## Screenshots
+![Group 4](https://github.com/user-attachments/assets/3d6b0014-41d4-47df-bebd-c7f60ed483c6)
+
+
+
+## What could be done
 - Use string resources instead of placing plain text in screens
-- Folders & artists tabs
+- Artists tabs
 - Sleep timer
 - Fix issue: the app crashes when it tries to load invalid/corrupted song files
 
