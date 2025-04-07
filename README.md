@@ -11,7 +11,8 @@ Music player for Android written in Kotlin
 - Restore player state when restarting the app
 
 ## Screenshots
-![Group 4](https://github.com/user-attachments/assets/97613fdd-cd13-46cc-b8b3-6db5c673d8e3)
+![Group 4](https://github.com/user-attachments/assets/3d6b0014-41d4-47df-bebd-c7f60ed483c6)
+
 
 
 ## What could be done
