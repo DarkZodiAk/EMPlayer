@@ -9,9 +9,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.domain.PlayerRepository
 import com.example.musicplayer.domain.PlaylistManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -26,6 +29,9 @@ class SelectSongsViewModel @Inject constructor(
 
     private var playlistId = -1L
 
+    private val channel = Channel<SelectSongsEvent>()
+    val uiEvent = channel.receiveAsFlow()
+
     init {
         playerRepository.getAllSongs()
             .map { it.sortedBy { it.title } }
@@ -35,7 +41,6 @@ class SelectSongsViewModel @Inject constructor(
             playlistId = id
         }
     }
-
 
     fun onAction(action: SelectSongsAction) {
         when(action) {
@@ -48,6 +53,9 @@ class SelectSongsViewModel @Inject constructor(
             SelectSongsAction.OnConfirmClick -> {
                 state.selectedSongs.forEach { songId ->
                     playlistManager.addSong(songId, playlistId)
+                }
+                viewModelScope.launch {
+                    channel.send(SelectSongsEvent.NavigateBack)
                 }
             }
             else -> Unit

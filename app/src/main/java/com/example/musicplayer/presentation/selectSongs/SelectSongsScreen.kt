@@ -15,6 +15,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -28,12 +29,19 @@ fun SelectSongsScreenRoot(
     viewModel: SelectSongsViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
+    LaunchedEffect(true) {
+         viewModel.uiEvent.collect { event ->
+             when(event) {
+                 SelectSongsEvent.NavigateBack -> onBack()
+             }
+         }
+    }
+
     SelectSongsScreen(
         state = viewModel.state,
         onAction = { action ->
             when(action) {
                 SelectSongsAction.OnBackClick -> onBack()
-                SelectSongsAction.OnConfirmClick -> onBack()
                 else -> Unit
             }
             viewModel.onAction(action)
