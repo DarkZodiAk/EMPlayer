@@ -39,6 +39,7 @@ class SongsViewModel @Inject constructor(
         when(action) {
             is SongsAction.PlaySong -> {
                 songPlayer.setPlaylist(state.songs, action.index)
+                songPlayer.play()
             }
 
             is SongsAction.SwitchSortType -> {

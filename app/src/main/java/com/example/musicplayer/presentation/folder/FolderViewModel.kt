@@ -19,7 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class FolderViewModel @Inject constructor(
     private val repository: PlayerRepository,
-    private val player: SongPlayer,
+    private val songPlayer: SongPlayer,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     var state by mutableStateOf(FolderState())
@@ -46,10 +46,10 @@ class FolderViewModel @Inject constructor(
     fun onAction(action: FolderAction) {
         when(action) {
             is FolderAction.OnSongClick -> {
-                player.setPlaylist(state.songs, action.index)
+                songPlayer.setPlaylist(state.songs, action.index)
+                songPlayer.play()
             }
             else -> Unit
         }
-
     }
 }

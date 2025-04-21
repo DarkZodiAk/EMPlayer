@@ -50,6 +50,10 @@ class SearchViewModel @Inject constructor(
             }
             is SearchAction.PlaySong -> {
                 songPlayer.setPlaylist(state.songs, action.index)
+                songPlayer.play()
+            }
+            SearchAction.RequestedFieldFocus -> {
+                state = state.copy(firstVisit = false)
             }
             else -> Unit
         }

@@ -38,8 +38,6 @@ class PlayerViewModel @Inject constructor(
             )
             if(playerState.isError) channel.send(PlayerEvent.Error)
         }.launchIn(viewModelScope)
-
-        songPlayer.play()
     }
 
     fun onAction(action: PlayerAction) {

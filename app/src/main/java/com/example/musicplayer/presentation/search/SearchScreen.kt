@@ -14,8 +14,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.Preview
@@ -51,6 +54,14 @@ fun SearchScreen(
 ) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(true) {
+        if(state.firstVisit) {
+            focusRequester.requestFocus()
+            onAction(SearchAction.RequestedFieldFocus)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -79,11 +90,11 @@ fun SearchScreen(
                     onValueChange = {
                         onAction(SearchAction.ModifySearchQuery(it))
                     },
+                    focusRequester = focusRequester,
                     modifier = Modifier.weight(1f)
                 )
             }
         },
-
     ) { padding ->
         LazyColumn(
             modifier = Modifier
