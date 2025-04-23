@@ -51,9 +51,7 @@ class SelectSongsViewModel @Inject constructor(
                 updateSelectedSongs(state.selectedSongs.toMutableList() - action.id)
             }
             SelectSongsAction.OnConfirmClick -> {
-                state.selectedSongs.forEach { songId ->
-                    playlistManager.addSong(songId, playlistId)
-                }
+                playlistManager.addSongs(state.selectedSongs, playlistId)
                 viewModelScope.launch {
                     channel.send(SelectSongsEvent.NavigateBack)
                 }

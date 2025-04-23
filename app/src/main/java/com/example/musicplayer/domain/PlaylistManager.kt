@@ -1,48 +1,30 @@
-@file:Suppress("OPT_IN_USAGE")
-
 package com.example.musicplayer.domain
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.consumeAsFlow
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /*
 * This class is used for adding songs to playlist
 * beyond viewModelScope
 * */
+@Singleton
 class PlaylistManager @Inject constructor(
     private val playerRepository: PlayerRepository
 ) {
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    private val channel = Channel<Pair<SongId, PlaylistId>>(capacity = Channel.UNLIMITED)
-    private val flowChannel = channel.consumeAsFlow()
+    private val scope = CoroutineScope(Dispatchers.IO)
 
-
-    init {
-        flowChannel
-            .onEach {
-                playerRepository.addSongToPlaylist(it.second, it.first)
-            }.debounce(100L)
-            .onEach {
-                val playlist = playerRepository.getPlaylistById(it.second).first()!!
-                playerRepository.updatePlaylist(playlist)
-            }.launchIn(scope)
-    }
-
-    fun addSong(songId: Long, playlistId: Long) {
+    fun addSongs(songIds: List<Long>, playlistId: Long) {
+        val copiedSongIds = songIds.toList()
         scope.launch {
-            channel.send(Pair(songId, playlistId))
+            copiedSongIds.forEach { songId ->
+                playerRepository.addSongToPlaylist(playlistId, songId)
+            }
+            val playlist = playerRepository.getPlaylistById(playlistId).first()!!
+            playerRepository.updatePlaylist(playlist)
         }
     }
 }
-
-typealias PlaylistId = Long
-typealias SongId = Long
