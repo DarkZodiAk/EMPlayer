@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import android.util.Log
 import android.util.Size
 import androidx.core.net.toUri
 import com.example.musicplayer.data.local.entity.Folder
@@ -22,6 +23,7 @@ import kotlinx.coroutines.launch
 import java.io.FileNotFoundException
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.system.measureTimeMillis
 
 @Singleton
 class SongObserver @Inject constructor(
@@ -49,11 +51,11 @@ class SongObserver @Inject constructor(
         val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         val selection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
 
-        val currentSongs = scope.async { playerRepository.getAllSongs().first() }
-        val currentFolders = scope.async { playerRepository.getAllFolders().first() }
+        val currentSongsDeferred = scope.async { playerRepository.getAllSongs().first() }
+        val currentFoldersDeferred = scope.async { playerRepository.getAllFolders().first() }
 
-        val newSongs = mutableSetOf<Song>()
-        var newFolders = mutableSetOf<Folder>()
+        val newSongs = mutableMapOf<Long, Song>()
+        val newFolders = mutableMapOf<String, Folder>()
 
         contentResolver.query(
             collection,
@@ -87,6 +89,7 @@ class SongObserver @Inject constructor(
 
                 val albumId = cursor.getLong(albumIdColumn)
                 val albumName = cursor.getString(albumColumn) ?: "Unknown"
+
                 val albumArt = getAlbumArtForId(albumId)
 
                 val duration = cursor.getInt(durationColumn)
@@ -97,60 +100,62 @@ class SongObserver @Inject constructor(
                 val dateAdded = cursor.getInt(dateAddedColumn)
                 val dateModified = if (dateModifiedColumn != -1) cursor.getInt(dateModifiedColumn) else -1
 
-                newSongs.add(
-                    Song(
-                        id,
-                        contentUri.toString(),
-                        title,
-                        artistId,
-                        artistName,
-                        albumId,
-                        albumName,
-                        albumArt,
-                        duration.toLong(),
-                        track.toLong(),
-                        data,
-                        size.toLong(),
-                        dateAdded.toLong(),
-                        dateModified.toLong()
-                    )
+                val song = Song(
+                    id,
+                    contentUri.toString(),
+                    title,
+                    artistId,
+                    artistName,
+                    albumId,
+                    albumName,
+                    albumArt,
+                    duration.toLong(),
+                    track.toLong(),
+                    data,
+                    size.toLong(),
+                    dateAdded.toLong(),
+                    dateModified.toLong()
                 )
-                newFolders.add(
-                    Folder(absoluteName = getFolderAbsoluteName(data), name = getFolderName(data))
-                )
+                newSongs[id] = song
+
+                val folderAbsoluteName = getFolderAbsoluteName(data)
+                val folderName = getFolderName(data)
+
+                newFolders.getOrPut(folderAbsoluteName, { Folder(absoluteName = folderAbsoluteName, name = folderName) })
             }
         }
 
-        //Remove deleted songs from DB
-        currentSongs.await().filter { song ->
-            newSongs.none { it.uri == song.uri }
-        }.forEach { song ->
-            scope.launch { playerRepository.deleteSong(song) }
-        }
+        val currentSongs = currentSongsDeferred.await()
+        val currentFolders = currentFoldersDeferred.await()
 
-        newFolders = newFolders.map { folder ->
-            folder.copy(id = playerRepository.getFolderIdByAbsoluteName(folder.absoluteName))
-        }.toMutableSet()
+        //Remove deleted songs from DB
+        currentSongs
+            .asSequence()
+            .filter { it.id !in newSongs }
+            .forEach { song ->
+                scope.launch { playerRepository.deleteSong(song) }
+            }
+
+        //Launch folder upserts to get their Ids later
+        val deferredFolderIds = newFolders.mapValues { (_, folder) ->
+            scope.async { playerRepository.upsertFolder(folder) }
+        }
 
         //Remove from DB folders that don't contain any songs, or they were deleted
-        currentFolders.await().filter { folder ->
-            newFolders.none { it.absoluteName == folder.absoluteName }
-        }.forEach { folder ->
-            scope.launch { playerRepository.deleteFolder(folder) }
-        }
-
-        //Add new folders
-        newFolders.forEach { folder ->
-            scope.launch { playerRepository.insertFolder(folder) }
-        }
+        currentFolders
+            .asSequence()
+            .filter { it.absoluteName !in newFolders }
+            .forEach { folder ->
+                scope.launch { playerRepository.deleteFolder(folder) }
+            }
 
         //Add new songs
-        newSongs.forEach { song ->
+        newSongs.values.forEach { song ->
             scope.launch {
                 playerRepository.upsertSong(song)
                 playerRepository.addSongToFolder(
                     songId = song.id,
-                    folderId = playerRepository.getFolderIdByAbsoluteName(getFolderAbsoluteName(song.data))!!
+                    folderId = deferredFolderIds[getFolderAbsoluteName(song.data)]!!.await()
                 )
             }
         }

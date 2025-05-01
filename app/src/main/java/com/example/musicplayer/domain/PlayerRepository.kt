@@ -19,12 +19,10 @@ interface PlayerRepository {
     suspend fun deleteSong(song: Song)
     fun getAllSongs(): Flow<List<Song>>
 
-    suspend fun insertFolder(folder: Folder)
+    suspend fun upsertFolder(folder: Folder): Long
     suspend fun deleteFolder(folder: Folder)
     fun getAllFolders(): Flow<List<Folder>>
     fun getFolderById(id: Long): Flow<Folder?>
-    suspend fun getFolderIdByAbsoluteName(absoluteName: String): Long?
     fun getSongsFromFolder(folderId: Long): Flow<List<Song>>
     suspend fun addSongToFolder(songId: Long, folderId: Long)
-    suspend fun deleteSongFromFolder(songId: Long, folderId: Long)
 }

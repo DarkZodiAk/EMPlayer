@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
 import com.example.musicplayer.data.local.entity.Folder
 import com.example.musicplayer.data.local.entity.Song
 import com.example.musicplayer.data.local.entity.SongFolderCross
@@ -12,8 +13,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FolderDao {
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertFolder(folder: Folder)
+    @Upsert
+    suspend fun upsertFolder(folder: Folder): Long
 
     @Delete
     suspend fun deleteFolder(folder: Folder)
