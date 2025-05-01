@@ -16,6 +16,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.FileNotFoundException
@@ -48,9 +49,10 @@ class SongObserver @Inject constructor(
         val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         val selection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
 
-        val currentSongs = playerRepository.getAllSongs().first()
-        val newSongs = mutableListOf<Song>()
-        val currentFolders = playerRepository.getAllFolders().first()
+        val currentSongs = scope.async { playerRepository.getAllSongs().first() }
+        val currentFolders = scope.async { playerRepository.getAllFolders().first() }
+
+        val newSongs = mutableSetOf<Song>()
         var newFolders = mutableSetOf<Folder>()
 
         contentResolver.query(
@@ -60,82 +62,67 @@ class SongObserver @Inject constructor(
             null,
             null
         )?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                do {
-                    val id =
-                        cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID))
-                    val contentUri = ContentUris.withAppendedId(
-                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                        id
+            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
+            val titleColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
+            val artistIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST_ID)
+            val artistColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
+            val albumIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
+            val albumColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
+            val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
+            val trackColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK)
+            val dataColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
+            val sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE)
+            val dateAddedColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
+            val dateModifiedColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_MODIFIED)
+
+            while(cursor.moveToNext()) {
+                val id = cursor.getLong(idColumn)
+                val contentUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id)
+
+                val title = cursor.getString(titleColumn)
+                val artistId = cursor.getLong(artistIdColumn)
+                val artistName = cursor.getString(artistColumn).let {
+                    if (it == "<unknown>") "Неизвестный исполнитель" else it
+                }
+
+                val albumId = cursor.getLong(albumIdColumn)
+                val albumName = cursor.getString(albumColumn) ?: "Unknown"
+                val albumArt = getAlbumArtForId(albumId)
+
+                val duration = cursor.getInt(durationColumn)
+                val track = cursor.getInt(trackColumn) % 1000
+
+                val data = cursor.getString(dataColumn)
+                val size = cursor.getInt(sizeColumn)
+                val dateAdded = cursor.getInt(dateAddedColumn)
+                val dateModified = if (dateModifiedColumn != -1) cursor.getInt(dateModifiedColumn) else -1
+
+                newSongs.add(
+                    Song(
+                        id,
+                        contentUri.toString(),
+                        title,
+                        artistId,
+                        artistName,
+                        albumId,
+                        albumName,
+                        albumArt,
+                        duration.toLong(),
+                        track.toLong(),
+                        data,
+                        size.toLong(),
+                        dateAdded.toLong(),
+                        dateModified.toLong()
                     )
-
-                    val title =
-                        cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE))
-                    val artistId =
-                        cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST_ID))
-                    var artistName =
-                        cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST))
-                    if (artistName == "<unknown>") {
-                        artistName = "Неизвестный исполнитель"
-                    }
-
-                    val albumId =
-                        cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID))
-                    var albumName =
-                        cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM))
-                    if (albumName == null) {
-                        albumName = "Unknown"
-                    }
-                    val albumArt = getAlbumArtForId(albumId)
-
-                    val duration =
-                        cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION))
-                    var track =
-                        cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK))
-                    while (track >= 1000) {
-                        track -= 1000
-                    }
-
-                    val data =
-                        cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA))
-                    val size =
-                        cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE))
-                    val dateAdded =
-                        cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED))
-                    var dateModified = -1
-                    try {
-                        dateModified =
-                            cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_MODIFIED))
-                    } catch (_: IllegalArgumentException) {
-                    }
-
-                    newSongs.add(
-                        Song(
-                            id,
-                            contentUri.toString(),
-                            title,
-                            artistId,
-                            artistName,
-                            albumId,
-                            albumName,
-                            albumArt,
-                            duration.toLong(),
-                            track.toLong(),
-                            data,
-                            size.toLong(),
-                            dateAdded.toLong(),
-                            dateModified.toLong()
-                        )
-                    )
-                    newFolders.add(
-                        Folder(absoluteName = getFolderAbsoluteName(data), name = getFolderName(data))
-                    )
-                } while(cursor.moveToNext())
+                )
+                newFolders.add(
+                    Folder(absoluteName = getFolderAbsoluteName(data), name = getFolderName(data))
+                )
             }
         }
 
         //Remove deleted songs from DB
-        currentSongs.filter { song ->
+        currentSongs.await().filter { song ->
             newSongs.none { it.uri == song.uri }
         }.forEach { song ->
             scope.launch { playerRepository.deleteSong(song) }
@@ -146,7 +133,7 @@ class SongObserver @Inject constructor(
         }.toMutableSet()
 
         //Remove from DB folders that don't contain any songs, or they were deleted
-        currentFolders.filter { folder ->
+        currentFolders.await().filter { folder ->
             newFolders.none { it.absoluteName == folder.absoluteName }
         }.forEach { folder ->
             scope.launch { playerRepository.deleteFolder(folder) }

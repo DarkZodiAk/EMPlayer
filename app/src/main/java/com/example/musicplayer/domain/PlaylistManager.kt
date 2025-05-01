@@ -18,9 +18,8 @@ class PlaylistManager @Inject constructor(
     private val scope = CoroutineScope(Dispatchers.IO)
 
     fun addSongs(songIds: List<Long>, playlistId: Long) {
-        val copiedSongIds = songIds.toList()
         scope.launch {
-            copiedSongIds.forEach { songId ->
+            songIds.forEach { songId ->
                 playerRepository.addSongToPlaylist(playlistId, songId)
             }
             val playlist = playerRepository.getPlaylistById(playlistId).first()!!
