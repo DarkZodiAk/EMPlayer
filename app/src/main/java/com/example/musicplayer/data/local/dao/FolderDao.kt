@@ -5,7 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Upsert
+import androidx.room.Transaction
 import com.example.musicplayer.data.local.entity.Folder
 import com.example.musicplayer.data.local.entity.Song
 import com.example.musicplayer.data.local.entity.SongFolderCross
@@ -13,8 +13,13 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FolderDao {
-    @Upsert
-    suspend fun upsertFolder(folder: Folder): Long
+    @Insert
+    suspend fun insertFolder(folder: Folder): Long
+
+    @Transaction
+    suspend fun upsertFolder(folder: Folder): Long {
+        return getFolderIdByAbsoluteName(folder.absoluteName) ?: insertFolder(folder)
+    }
 
     @Delete
     suspend fun deleteFolder(folder: Folder)

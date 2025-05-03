@@ -3,13 +3,8 @@ package com.example.musicplayer.data
 import android.content.ContentUris
 import android.content.Context
 import android.database.ContentObserver
-import android.graphics.BitmapFactory
 import android.net.Uri
-import android.os.Build
 import android.provider.MediaStore
-import android.util.Log
-import android.util.Size
-import androidx.core.net.toUri
 import com.example.musicplayer.data.local.entity.Folder
 import com.example.musicplayer.data.local.entity.Song
 import com.example.musicplayer.domain.PlayerRepository
@@ -20,18 +15,18 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.io.FileNotFoundException
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.system.measureTimeMillis
 
 @Singleton
 class SongObserver @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val playerRepository: PlayerRepository
+    private val playerRepository: PlayerRepository,
+    private val albumArtFetcher: AlbumArtFetcher
 ) {
     private val contentResolver = context.contentResolver
     private val packageName = context.packageName
+    private val defaultImageUri = "android.resource://$packageName/drawable/music_icon"
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val contentObserver = object : ContentObserver(null) {
         override fun onChange(selfChange: Boolean) { scope.launch { loadAll() } }
@@ -45,11 +40,23 @@ class SongObserver @Inject constructor(
     }
     private var isObserving = false
 
-    private val emptyAlbumArts = mutableSetOf<String>()
-
     private suspend fun loadAll() {
         val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         val selection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
+        val projection = arrayOf(
+            MediaStore.Audio.Media._ID,
+            MediaStore.Audio.Media.TITLE,
+            MediaStore.Audio.Media.ARTIST_ID,
+            MediaStore.Audio.Media.ARTIST,
+            MediaStore.Audio.Media.ALBUM_ID,
+            MediaStore.Audio.Media.ALBUM,
+            MediaStore.Audio.Media.DURATION,
+            MediaStore.Audio.Media.TRACK,
+            MediaStore.Audio.Media.DATA,
+            MediaStore.Audio.Media.SIZE,
+            MediaStore.Audio.Media.DATE_ADDED,
+            MediaStore.Audio.Media.DATE_MODIFIED
+        )
 
         val currentSongsDeferred = scope.async { playerRepository.getAllSongs().first() }
         val currentFoldersDeferred = scope.async { playerRepository.getAllFolders().first() }
@@ -59,7 +66,7 @@ class SongObserver @Inject constructor(
 
         contentResolver.query(
             collection,
-            null,
+            projection,
             selection,
             null,
             null
@@ -90,7 +97,7 @@ class SongObserver @Inject constructor(
                 val albumId = cursor.getLong(albumIdColumn)
                 val albumName = cursor.getString(albumColumn) ?: "Unknown"
 
-                val albumArt = getAlbumArtForId(albumId)
+                albumArtFetcher.addAlbumId(albumId)
 
                 val duration = cursor.getInt(durationColumn)
                 val track = cursor.getInt(trackColumn) % 1000
@@ -108,7 +115,7 @@ class SongObserver @Inject constructor(
                     artistName,
                     albumId,
                     albumName,
-                    albumArt,
+                    defaultImageUri,
                     duration.toLong(),
                     track.toLong(),
                     data,
@@ -161,24 +168,6 @@ class SongObserver @Inject constructor(
         }
     }
 
-    //Get Uri for AlbumArt of song. If it's not found, return default image Uri
-    private fun getAlbumArtForId(albumId: Long): String {
-        val albumArt = ContentUris.withAppendedId(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI, albumId).toString()
-        if(albumArt in emptyAlbumArts)
-            return "android.resource://$packageName/drawable/music_icon"
-
-        return try {
-            if (Build.VERSION.SDK_INT < 29) {
-                BitmapFactory.decodeFile(albumArt)
-            } else {
-                contentResolver.loadThumbnail(albumArt.toUri(), Size(20, 20), null)
-            }
-            albumArt
-        } catch (e: FileNotFoundException) {
-            emptyAlbumArts.add(albumArt)
-            "android.resource://$packageName/drawable/music_icon"
-        }
-    }
 
     private fun getFolderAbsoluteName(songPath: String): String {
         return songPath.split('/').dropLast(1).joinToString("/")
@@ -188,7 +177,7 @@ class SongObserver @Inject constructor(
         return songPath.split('/').asReversed()[1]
     }
 
-     fun startObservingSongs() {
+    fun startObservingSongs() {
         if(isObserving) return
         isObserving = true
         scope.launch {
