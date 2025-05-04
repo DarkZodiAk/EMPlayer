@@ -13,6 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -58,7 +59,7 @@ class SongObserver @Inject constructor(
             MediaStore.Audio.Media.DATE_MODIFIED
         )
 
-        val currentSongsDeferred = scope.async { playerRepository.getAllSongs().first() }
+        val currentSongsDeferred = scope.async { playerRepository.getAllSongs().first().toSet() }
         val currentFoldersDeferred = scope.async { playerRepository.getAllFolders().first() }
 
         val newSongs = mutableMapOf<Long, Song>()
@@ -135,6 +136,11 @@ class SongObserver @Inject constructor(
         val currentSongs = currentSongsDeferred.await()
         val currentFolders = currentFoldersDeferred.await()
 
+        //Launch folder upserts to get their Ids later
+        val deferredFolderIds = newFolders.mapValues { (_, folder) ->
+            scope.async { playerRepository.upsertFolder(folder) }
+        }
+
         //Remove deleted songs from DB
         currentSongs
             .asSequence()
@@ -142,11 +148,6 @@ class SongObserver @Inject constructor(
             .forEach { song ->
                 scope.launch { playerRepository.deleteSong(song) }
             }
-
-        //Launch folder upserts to get their Ids later
-        val deferredFolderIds = newFolders.mapValues { (_, folder) ->
-            scope.async { playerRepository.upsertFolder(folder) }
-        }
 
         //Remove from DB folders that don't contain any songs, or they were deleted
         currentFolders
@@ -157,17 +158,31 @@ class SongObserver @Inject constructor(
             }
 
         //Add new songs
-        newSongs.values.forEach { song ->
-            scope.launch {
-                playerRepository.upsertSong(song)
-                playerRepository.addSongToFolder(
-                    songId = song.id,
-                    folderId = deferredFolderIds[getFolderAbsoluteName(song.data)]!!.await()
-                )
+        newSongs.values
+            .asSequence()
+            .filter { it !in currentSongs }
+            .forEach { song ->
+                scope.launch {
+                    playerRepository.upsertSong(song)
+                    playerRepository.addSongToFolder(
+                        songId = song.id,
+                        folderId = deferredFolderIds[getFolderAbsoluteName(song.data)]!!.await()
+                    )
+                }
             }
-        }
-    }
 
+        while(albumArtFetcher.working) {
+            delay(10L)
+        }
+
+        newSongs.values
+            .asSequence()
+            .filter { it !in currentSongs }
+            .map { it.copy(albumArt = albumArtFetcher.albumArts[it.albumId]!!) }
+            .forEach { song ->
+                scope.launch { playerRepository.upsertSong(song) }
+            }
+    }
 
     private fun getFolderAbsoluteName(songPath: String): String {
         return songPath.split('/').dropLast(1).joinToString("/")

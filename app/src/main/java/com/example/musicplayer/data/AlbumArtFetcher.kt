@@ -33,7 +33,7 @@ class AlbumArtFetcher @Inject constructor(
     private val mutex = Mutex()
 
     private var awaitsLeft = MAX_AWAITS
-    private var working = false
+    var working = false
 
     private val inputAlbumIds = mutableListOf<Long>() // Input queue for album IDs to process
     private val pendingAlbumIds = mutableSetOf<Long>() // Albums waiting to be processed
