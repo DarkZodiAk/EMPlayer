@@ -28,7 +28,9 @@ class SongObserver @Inject constructor(
     private val contentResolver = context.contentResolver
     private val packageName = context.packageName
     private val defaultImageUri = "android.resource://$packageName/drawable/music_icon"
+
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
     private val contentObserver = object : ContentObserver(null) {
         override fun onChange(selfChange: Boolean) { scope.launch { loadAll() } }
         override fun onChange(selfChange: Boolean, uri: Uri?) { scope.launch { loadAll() } }
@@ -40,6 +42,7 @@ class SongObserver @Inject constructor(
         ) { scope.launch { loadAll() } }
     }
     private var isObserving = false
+
 
     private suspend fun loadAll() {
         val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
@@ -133,6 +136,8 @@ class SongObserver @Inject constructor(
             }
         }
 
+        val executor = ConcurrentExecutor(32, 30L, 5)
+
         val currentSongs = currentSongsDeferred.await()
         val currentFolders = currentFoldersDeferred.await()
 
@@ -146,7 +151,7 @@ class SongObserver @Inject constructor(
             .asSequence()
             .filter { it.id !in newSongs }
             .forEach { song ->
-                scope.launch { playerRepository.deleteSong(song) }
+                executor.addTask { playerRepository.deleteSong(song) }
             }
 
         //Remove from DB folders that don't contain any songs, or they were deleted
@@ -154,7 +159,7 @@ class SongObserver @Inject constructor(
             .asSequence()
             .filter { it.absoluteName !in newFolders }
             .forEach { folder ->
-                scope.launch { playerRepository.deleteFolder(folder) }
+                executor.addTask { playerRepository.deleteFolder(folder) }
             }
 
         //Add new songs
@@ -162,7 +167,7 @@ class SongObserver @Inject constructor(
             .asSequence()
             .filter { it !in currentSongs }
             .forEach { song ->
-                scope.launch {
+                executor.addTask {
                     playerRepository.upsertSong(song)
                     playerRepository.addSongToFolder(
                         songId = song.id,
@@ -180,7 +185,7 @@ class SongObserver @Inject constructor(
             .filter { it !in currentSongs }
             .map { it.copy(albumArt = albumArtFetcher.albumArts[it.albumId]!!) }
             .forEach { song ->
-                scope.launch { playerRepository.upsertSong(song) }
+                executor.addTask { playerRepository.upsertSong(song) }
             }
     }
 

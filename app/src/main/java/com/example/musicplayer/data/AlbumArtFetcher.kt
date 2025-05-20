@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
+import java.util.LinkedList
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -35,26 +36,29 @@ class AlbumArtFetcher @Inject constructor(
     private var awaitsLeft = MAX_AWAITS
     var working = false
 
-    private val inputAlbumIds = mutableListOf<Long>() // Input queue for album IDs to process
+    private val inputAlbumIds = LinkedList<Long>() // Input queue
     private val pendingAlbumIds = mutableSetOf<Long>() // Albums waiting to be processed
     private val takenAlbumIds = mutableSetOf<Long>() // Albums currently being processed
     val albumArts = HashMap<Long, String>()
+
 
     /**
      * Adds album ID to processing queue and starts workers if not already running.
      * Uses a producer-consumer pattern with timeout-based shutdown
      */
     fun addAlbumId(albumId: Long) {
-        if(!working) initializeWorkers()
+        ensureWorkersStarted()
         inputAlbumIds.add(albumId)
     }
+
 
     /**
      * Initializes worker coroutines and manager coroutine on first use
      * 7 workers handle parallel processing while manager handles queue management
      */
-    private fun initializeWorkers() {
-        // Launch 7 worker coroutines to process album art requests
+    private fun ensureWorkersStarted() {
+        if(working) return
+
         repeat(7) { scope.launch {
             while(true) {
                 semaphore.acquire() // Wait for available work permit
@@ -75,11 +79,9 @@ class AlbumArtFetcher @Inject constructor(
             while(awaitsLeft > 0) {
                 processInputQueue()
                 delay(AWAIT_DELAY)
-                // Reset timeout counter if work is ongoing, else decrement
                 awaitsLeft = if(takenAlbumIds.isNotEmpty()) MAX_AWAITS else awaitsLeft - 1
             }
 
-            // Shutdown workers after inactivity period
             working = false
             scope.coroutineContext.cancelChildren()
         }
@@ -87,14 +89,15 @@ class AlbumArtFetcher @Inject constructor(
         working = true
     }
 
+
     /**
      * Moves album IDs from input queue to pending set while avoiding duplicates
      */
     private suspend fun processInputQueue() {
-        while (inputAlbumIds.isNotEmpty()) {
-            val tookId = inputAlbumIds.removeAt(0)
+        while(inputAlbumIds.isNotEmpty()) {
+            val tookId = inputAlbumIds.removeFirst()
             mutex.withLock {
-                if (isValidForProcessing(tookId)) {
+                if(isValidForProcessing(tookId)) {
                     pendingAlbumIds.add(tookId)
                     semaphore.release()
                 }
@@ -102,6 +105,7 @@ class AlbumArtFetcher @Inject constructor(
             awaitsLeft = MAX_AWAITS + 1
         }
     }
+
 
     /**
      * Checks if album ID needs processing
