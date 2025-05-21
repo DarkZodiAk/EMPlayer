@@ -92,8 +92,8 @@ class PlayerRepositoryImpl @Inject constructor(
     }
 
     /* FOLDERS */
-    override suspend fun insertFolder(folder: Folder) {
-        folderDao.insertFolder(folder)
+    override suspend fun upsertFolder(folder: Folder): Long {
+        return folderDao.upsertFolder(folder)
     }
 
     override suspend fun deleteFolder(folder: Folder) {
@@ -108,20 +108,12 @@ class PlayerRepositoryImpl @Inject constructor(
         return folderDao.getFolderById(id)
     }
 
-    override suspend fun getFolderIdByAbsoluteName(absoluteName: String): Long? {
-        return folderDao.getFolderIdByAbsoluteName(absoluteName)
-    }
-
     override fun getSongsFromFolder(folderId: Long): Flow<List<Song>> {
         return folderDao.getSongsFromFolder(folderId)
     }
 
     override suspend fun addSongToFolder(songId: Long, folderId: Long) {
         folderDao.addSongToFolder(SongFolderCross(songId, folderId))
-    }
-
-    override suspend fun deleteSongFromFolder(songId: Long, folderId: Long) {
-        folderDao.deleteSongFromFolder(SongFolderCross(songId, folderId))
     }
 
     companion object {

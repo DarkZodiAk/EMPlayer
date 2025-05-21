@@ -22,13 +22,13 @@ import com.example.musicplayer.data.StopReceiver
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 import com.example.musicplayer.R
 import com.example.musicplayer.domain.songPlayer.SongPlayer
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
@@ -177,8 +177,7 @@ class PlayerService: Service() {
         stopSelf()
         player.stop()
         _isServiceActive.value = false
-        scope.cancel()
-        scope = CoroutineScope(Dispatchers.Main)
+        scope.coroutineContext.cancelChildren()
     }
 
     private fun createNotificationChannel() {
