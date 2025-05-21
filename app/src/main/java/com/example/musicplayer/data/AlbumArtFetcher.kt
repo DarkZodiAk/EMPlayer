@@ -7,7 +7,6 @@ import android.os.Build
 import android.provider.MediaStore
 import android.util.Size
 import androidx.core.net.toUri
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,13 +16,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
-import java.util.LinkedList
-import javax.inject.Inject
-import javax.inject.Singleton
+import java.util.concurrent.ConcurrentLinkedQueue
 
-@Singleton
-class AlbumArtFetcher @Inject constructor(
-    @ApplicationContext private val context: Context,
+class AlbumArtFetcher(
+    private val context: Context,
+    private val awaitDelay: Long,
+    private val maxAwaits: Int
 ) {
     private val contentResolver = context.contentResolver
     private val packageName = context.packageName
@@ -33,10 +31,10 @@ class AlbumArtFetcher @Inject constructor(
     private val semaphore = Semaphore(Int.MAX_VALUE, Int.MAX_VALUE)
     private val mutex = Mutex()
 
-    private var awaitsLeft = MAX_AWAITS
+    private var awaitsLeft = maxAwaits
     var working = false
 
-    private val inputAlbumIds = LinkedList<Long>() // Input queue
+    private val inputAlbumIds = ConcurrentLinkedQueue<Long>() // Input queue
     private val pendingAlbumIds = mutableSetOf<Long>() // Albums waiting to be processed
     private val takenAlbumIds = mutableSetOf<Long>() // Albums currently being processed
     val albumArts = HashMap<Long, String>()
@@ -78,8 +76,8 @@ class AlbumArtFetcher @Inject constructor(
         scope.launch {
             while(awaitsLeft > 0) {
                 processInputQueue()
-                delay(AWAIT_DELAY)
-                awaitsLeft = if(takenAlbumIds.isNotEmpty()) MAX_AWAITS else awaitsLeft - 1
+                delay(awaitDelay)
+                awaitsLeft = if(takenAlbumIds.isNotEmpty()) maxAwaits else awaitsLeft - 1
             }
 
             working = false
@@ -90,27 +88,22 @@ class AlbumArtFetcher @Inject constructor(
     }
 
 
-    /**
-     * Moves album IDs from input queue to pending set while avoiding duplicates
-     */
+    // Moves album IDs from input queue to pending set while avoiding duplicates
     private suspend fun processInputQueue() {
         while(inputAlbumIds.isNotEmpty()) {
-            val tookId = inputAlbumIds.removeFirst()
+            val tookId = inputAlbumIds.poll() ?: break
             mutex.withLock {
                 if(isValidForProcessing(tookId)) {
                     pendingAlbumIds.add(tookId)
                     semaphore.release()
                 }
             }
-            awaitsLeft = MAX_AWAITS + 1
+            awaitsLeft = maxAwaits + 1
         }
     }
 
 
-    /**
-     * Checks if album ID needs processing
-     * Returns true if not already processed, pending, or being processed
-     */
+    // Checks if album ID needs processing
     private fun isValidForProcessing(albumId: Long) =
         albumId !in albumArts && albumId !in pendingAlbumIds && albumId !in takenAlbumIds
 
@@ -127,12 +120,5 @@ class AlbumArtFetcher @Inject constructor(
         } catch(e: Exception) {
             albumArts[albumId] = defaultImageUri
         }
-    }
-
-    companion object {
-        // Inactivity check interval
-        const val AWAIT_DELAY = 5L
-        // Maximum number of empty cycles before shutdown (20 * 5ms = 100ms total timeout)
-        const val MAX_AWAITS = 20
     }
 }

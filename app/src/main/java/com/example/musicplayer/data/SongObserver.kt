@@ -22,8 +22,7 @@ import javax.inject.Singleton
 @Singleton
 class SongObserver @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val playerRepository: PlayerRepository,
-    private val albumArtFetcher: AlbumArtFetcher
+    private val playerRepository: PlayerRepository
 ) {
     private val contentResolver = context.contentResolver
     private val packageName = context.packageName
@@ -42,6 +41,9 @@ class SongObserver @Inject constructor(
         ) { scope.launch { loadAll() } }
     }
     private var isObserving = false
+
+    private val albumArtFetcher = AlbumArtFetcher(context, 5L, 20)
+    private val executor = ConcurrentExecutor(32, 30L, 5)
 
 
     private suspend fun loadAll() {
@@ -62,7 +64,9 @@ class SongObserver @Inject constructor(
             MediaStore.Audio.Media.DATE_MODIFIED
         )
 
-        val currentSongsDeferred = scope.async { playerRepository.getAllSongs().first().toSet() }
+        val currentSongsDeferred = scope.async {
+            playerRepository.getAllSongs().first().associateBy { it.id }
+        }
         val currentFoldersDeferred = scope.async { playerRepository.getAllFolders().first() }
 
         val newSongs = mutableMapOf<Long, Song>()
@@ -136,8 +140,6 @@ class SongObserver @Inject constructor(
             }
         }
 
-        val executor = ConcurrentExecutor(32, 30L, 5)
-
         val currentSongs = currentSongsDeferred.await()
         val currentFolders = currentFoldersDeferred.await()
 
@@ -149,8 +151,8 @@ class SongObserver @Inject constructor(
         //Remove deleted songs from DB
         currentSongs
             .asSequence()
-            .filter { it.id !in newSongs }
-            .forEach { song ->
+            .filter { it.key !in newSongs }
+            .forEach { (_, song) ->
                 executor.addTask { playerRepository.deleteSong(song) }
             }
 
@@ -163,10 +165,10 @@ class SongObserver @Inject constructor(
             }
 
         //Add new songs
-        newSongs.values
+        newSongs
             .asSequence()
-            .filter { it !in currentSongs }
-            .forEach { song ->
+            .filter { it.key !in currentSongs }
+            .forEach { (_, song) ->
                 executor.addTask {
                     playerRepository.upsertSong(song)
                     playerRepository.addSongToFolder(
@@ -176,14 +178,16 @@ class SongObserver @Inject constructor(
                 }
             }
 
+        // Wait until album arts are fetched
         while(albumArtFetcher.working) {
             delay(10L)
         }
 
-        newSongs.values
+        // Then add them to the new songs
+        newSongs
             .asSequence()
-            .filter { it !in currentSongs }
-            .map { it.copy(albumArt = albumArtFetcher.albumArts[it.albumId]!!) }
+            .filter { it.key !in currentSongs }
+            .map { it.value.copy(albumArt = albumArtFetcher.albumArts[it.value.albumId]!!) }
             .forEach { song ->
                 executor.addTask { playerRepository.upsertSong(song) }
             }
